@@ -888,6 +888,29 @@ body {
   .cta-box { padding: 2rem 1.5rem; }
   .footer { flex-direction: column; align-items: flex-start; }
 }
+
+/* Logo image sizing */
+.logo-img {
+  height: 36px;
+  width: auto;
+  display: block;
+  filter: brightness(0) invert(1); /* force white since source may vary */
+}
+.logo { line-height: 0; }
+
+.loading-logo .logo-img {
+  height: 48px;
+  width: auto;
+  margin-bottom: 0;
+}
+
+.footer-logo-img {
+  height: 28px;
+  width: auto;
+  display: block;
+  filter: brightness(0) invert(1);
+  opacity: 0.7;
+}
 </style>
 </head>
 <body>
@@ -898,10 +921,7 @@ body {
 <div id="screen-landing" class="screen active">
 
   <nav class="nav">
-    <a href="/" class="logo">
-      <div class="logo-cube"></div>
-      <div class="logo-text">Red<span>Cube</span></div>
-    </a>
+    <a href="/" class="logo"><img src="https://redcube.co/wp-content/uploads/2025/08/RedcubeLogoFinal_Signature-1030x340.png" alt="RedCube Creative" class="logo-img"></a>
     <div class="nav-right">
       <a class="nav-link" href="https://redcube.co" target="_blank">redcube.co</a>
       <a class="nav-cta" href="https://redcube.co/contact" target="_blank">Get a Quote</a>
@@ -987,10 +1007,7 @@ body {
   </div>
 
   <footer class="footer">
-    <div class="footer-left">
-      <div class="footer-cube"></div>
-      <span class="footer-brand">RedCube Creative</span>
-    </div>
+    <div class="footer-left"><img src="https://redcube.co/wp-content/uploads/2025/08/RedcubeLogoFinal_Signature-1030x340.png" alt="RedCube Creative" class="footer-logo-img"></div>
     <div class="footer-right">
       © 2025 RedCube Creative · <a href="https://redcube.co" target="_blank">redcube.co</a> · (678) 877-0609
     </div>
@@ -1002,10 +1019,7 @@ body {
      LOADING SCREEN
 ═══════════════════════════════════════ -->
 <div id="screen-loading" class="screen">
-  <div class="loading-logo">
-    <div class="loading-cube"></div>
-    <div class="loading-logo-text">RedCube</div>
-  </div>
+  <div class="loading-logo"><img src="https://redcube.co/wp-content/uploads/2025/08/RedcubeLogoFinal_Signature-1030x340.png" alt="RedCube Creative" class="logo-img"></div>
   <div class="loading-url" id="loading-url-text">Preparing scan...</div>
   <div class="prog-track">
     <div class="prog-fill" id="progress-fill"></div>
@@ -1029,10 +1043,7 @@ body {
 <div id="screen-results" class="screen">
 
   <nav class="nav">
-    <a href="/" class="logo" onclick="resetToLanding(); return false;">
-      <div class="logo-cube"></div>
-      <div class="logo-text">Red<span>Cube</span></div>
-    </a>
+    <a href="/" class="logo" onclick="resetToLanding(); return false;"><img src="https://redcube.co/wp-content/uploads/2025/08/RedcubeLogoFinal_Signature-1030x340.png" alt="RedCube Creative" class="logo-img"></a>
     <div class="nav-right">
       <a class="nav-link" href="https://redcube.co" target="_blank">redcube.co</a>
       <a class="nav-cta" href="https://redcube.co/contact" target="_blank">Schedule a Call</a>
@@ -1066,10 +1077,7 @@ body {
   </div>
 
   <footer class="footer">
-    <div class="footer-left">
-      <div class="footer-cube"></div>
-      <span class="footer-brand">RedCube Creative</span>
-    </div>
+    <div class="footer-left"><img src="https://redcube.co/wp-content/uploads/2025/08/RedcubeLogoFinal_Signature-1030x340.png" alt="RedCube Creative" class="footer-logo-img"></div>
     <div class="footer-right">
       © 2025 RedCube Creative · <a href="https://redcube.co" target="_blank">redcube.co</a> · (678) 877-0609
     </div>

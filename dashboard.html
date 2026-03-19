@@ -475,7 +475,7 @@ select.filter-select{background:var(--b2);border:1px solid var(--b4);border-radi
 
           <div class="tab-panel" id="tab-keywords-site">
             <div class="kw-add-row">
-              <input class="kw-input" id="kw-input-new" placeholder="Enter target keyword..." onkeydown="if(event.key==='Enter')addKeyword()">
+              <input class="kw-input" id="kw-input-new" placeholder="keyword one, keyword two, keyword three..." onkeydown="if(event.key==='Enter')addKeyword()">
               <select class="filter-select" id="kw-page-assign" style="min-width:180px">
                 <option value="">Assign to page (optional)</option>
               </select>
@@ -1136,20 +1136,22 @@ function renderSiteKeywords() {
 }
 
 async function addKeyword() {
-  const kw   = document.getElementById('kw-input-new').value.trim();
+  const raw  = document.getElementById('kw-input-new').value.trim();
   const page = document.getElementById('kw-page-assign').value;
-  if (!kw || !currentSiteId) return;
+  if (!raw || !currentSiteId) return;
 
   const res = await apiFetch('/admin/sites/' + currentSiteId + '/keywords', {
     method: 'POST',
-    body: JSON.stringify({ keyword: kw, page_url: page || null })
+    body: JSON.stringify({ keyword: raw, page_url: page || null })
   });
-  if (!res || !res.ok) { toast('Failed to add keyword'); return; }
+  if (!res || !res.ok) { toast('Failed to add keywords'); return; }
+
   const data = await res.json();
-  allKeywords.unshift(data.keyword);
+  const added = data.keywords?.length || 0;
+  allKeywords.unshift(...(data.keywords || []));
   renderSiteKeywords();
   document.getElementById('kw-input-new').value = '';
-  toast('Keyword added — position tracking starts next sync');
+  toast(added + ' keyword' + (added !== 1 ? 's' : '') + ' added');
 }
 
 async function deleteKeyword(kwId) {

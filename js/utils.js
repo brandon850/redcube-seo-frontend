@@ -1,4 +1,4 @@
-import * as State from './state.js';
+import * as State from '/js/state.js';
 
 export function toast(msg, dur = 3500) {
   const t = document.getElementById('toast');
@@ -53,7 +53,7 @@ export async function apiFetch(path, opts = {}) {
     },
   });
   if (res.status === 401) {
-    const { doLogout } = await import('./auth.js');
+    const { doLogout } = await import('/js/auth.js');
     doLogout();
     return null;
   }

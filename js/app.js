@@ -1,5 +1,5 @@
-import { authUser, sites, currentSiteId } from './state.js';
-import { showScreen } from './utils.js';
+import { authUser, sites, currentSiteId } from '/state.js';
+import { showScreen } from '/utils.js';
 
 const PANEL_TITLES = {
   overview: 'Overview', sites: 'Sites', keywords: 'Keyword Tracking',

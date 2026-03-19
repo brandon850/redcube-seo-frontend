@@ -2,14 +2,14 @@ import * as State from '/js/state.js';
 import { showScreen } from '/js/utils.js';
 
 const PANEL_TITLES = {
-  overview: 'Overview', State.sites: 'Sites', keywords: 'Keyword Tracking',
+  overview: 'Overview', sites: 'Sites', keywords: 'Keyword Tracking',
   content: 'Content', reports: 'Client Reports', team: 'Team',
 };
 
 export async function initApp() {
   showScreen('screen-app');
   document.getElementById('sb-user-label').textContent = State.authUser?.email || '—';
-  const { loadSites } = await import('/js/State.sites.js');
+  const { loadSites } = await import('/js/sites.js');
   await loadSites();
   navTo('overview');
 }
@@ -22,8 +22,8 @@ export async function navTo(panel) {
   document.getElementById('topbar-title').textContent = PANEL_TITLES[panel] || panel;
   document.getElementById('topbar-actions').innerHTML = '';
 
-  if (panel === 'overview') { const { renderOverview } = await import('/js/State.sites.js'); renderOverview(); }
-  if (panel === 'State.sites')    { const { renderSitesList } = await import('/js/State.sites.js'); renderSitesList(); }
+  if (panel === 'overview') { const { renderOverview } = await import('/js/sites.js'); renderOverview(); }
+  if (panel === 'sites')    { const { renderSitesList } = await import('/js/sites.js'); renderSitesList(); }
   if (panel === 'keywords') { const { loadKeywordsPanel } = await import('/js/keywords.js'); loadKeywordsPanel(); }
   if (panel === 'content')  { const { loadContentPanel } = await import('/js/content.js'); loadContentPanel(); }
   if (panel === 'reports')  { const { loadReports } = await import('/js/reports.js'); loadReports(); }

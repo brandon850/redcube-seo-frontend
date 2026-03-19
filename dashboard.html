@@ -1365,6 +1365,7 @@ async function loadReports() {
       <div style="display:flex;gap:.5rem">
         <a class="btn-secondary" href="${r.public_url}" target="_blank" style="text-decoration:none;display:inline-flex;align-items:center;padding:.5rem 1rem;font-size:.65rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--g4);border:1px solid var(--b4);border-radius:3px">View Report ↗</a>
         <button class="btn-secondary" onclick="copyReportLink('${r.public_url}')">Copy Link</button>
+        <button class="action-btn danger" onclick="deleteReport('${r.id}')">Delete</button>
       </div>
     </div>`;
   }).join('');
@@ -1381,6 +1382,14 @@ async function generateClientReport() {
 
 function copyReportLink(url) {
   navigator.clipboard.writeText(url).then(() => toast('Link copied to clipboard'));
+}
+
+async function deleteReport(reportId) {
+  if (!confirm('Delete this report? The public link will stop working.')) return;
+  const res = await apiFetch('/admin/reports/' + reportId, { method: 'DELETE' });
+  if (!res || !res.ok) { toast('Failed to delete report'); return; }
+  toast('Report deleted');
+  loadReports();
 }
 
 // ════════════════════════════════════════════════════

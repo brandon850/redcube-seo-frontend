@@ -1,9 +1,9 @@
-import { allContent, currentSiteId, sites } from '/js/state.js';
+import * as State from '/js/state.js';
 import { setAllContent } from '/js/state.js';
 import { toast, apiFetch, fmtDate } from '/js/utils.js';
 
 export async function loadSiteContent(siteId) {
-  const res = await apiFetch('/admin/sites/' + siteId + '/content');
+  const res = await apiFetch('/admin/State.sites/' + siteId + '/content');
   if (!res) return;
   setAllContent((await res.json()).drafts || []);
   renderSiteContentGrid();
@@ -12,16 +12,16 @@ export async function loadSiteContent(siteId) {
 export function renderSiteContentGrid() {
   const grid = document.getElementById('site-content-grid');
   if (!grid) return;
-  if (!allContent.length) {
+  if (!State.allContent.length) {
     grid.innerHTML = `<div class="empty" style="grid-column:1/-1"><div class="empty-icon">◻</div><div class="empty-title">No content yet</div><div class="empty-sub">Create a blog post or landing page for this site.</div></div>`;
     return;
   }
-  grid.innerHTML = allContent.map(d => contentCardHTML(d)).join('');
+  grid.innerHTML = State.allContent.map(d => contentCardHTML(d)).join('');
 }
 
 export async function loadContentPanel() {
   const siteFilter = document.getElementById('content-site-filter')?.value || '';
-  const url = siteFilter ? '/admin/sites/' + siteFilter + '/content' : '/admin/content';
+  const url = siteFilter ? '/admin/State.sites/' + siteFilter + '/content' : '/admin/content';
   const res = await apiFetch(url);
   if (!res) return;
   const drafts = (await res.json()).drafts || [];
@@ -34,7 +34,7 @@ export async function loadContentPanel() {
 }
 
 export function contentCardHTML(d) {
-  const site        = sites.find(s => s.id === d.site_id);
+  const site        = State.sites.find(s => s.id === d.site_id);
   const typeColor   = d.type === 'post' ? '#60a5fa' : '#fbbf24';
   const statusClass = d.status === 'published' ? 'status-published' : d.status === 'review' ? 'status-review' : 'status-draft';
   return `<div class="content-card" onclick="openEditor('${d.id}')">
@@ -54,14 +54,14 @@ export function newContent(type) {
   document.getElementById('editor-type').value     = type;
   document.getElementById('editor-status').value   = 'draft';
   document.getElementById('editor-draft-id').value = '';
-  if (currentSiteId) document.getElementById('editor-site').value = currentSiteId;
+  if (State.currentSiteId) document.getElementById('editor-site').value = State.currentSiteId;
   document.getElementById('content-list-view').style.display   = 'none';
   document.getElementById('content-editor-view').style.display = '';
   scoreContent();
 }
 
 export function openEditor(draftId) {
-  const draft = allContent.find(d => d.id === draftId) || {};
+  const draft = State.allContent.find(d => d.id === draftId) || {};
   document.getElementById('editor-title').value    = draft.title            || '';
   document.getElementById('editor-keyword').value  = draft.target_keyword   || '';
   document.getElementById('editor-meta').value     = draft.meta_description || '';

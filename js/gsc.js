@@ -1,7 +1,7 @@
 import * as State from '/js/state.js';
 import { toast, apiFetch } from '/js/utils.js';
 import { loadSiteKeywords } from '/js/keywords.js';
-import { loadSites, openSiteDetail } from '/js/State.sites.js';
+import { loadSites, openSiteDetail } from '/js/sites.js';
 
 export async function connectGSC() {
   if (!State.currentSiteId) return;

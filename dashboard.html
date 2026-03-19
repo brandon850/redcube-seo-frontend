@@ -6,7 +6,7 @@
 <title>RedCube SEO Platform</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="./dashboard.css">
+<link rel="stylesheet" href="/dashboard.css">
 <script>window.API_BASE = 'https://redcube-seo-backend-production.up.railway.app';</script>
 </head>
 <body>
@@ -432,14 +432,14 @@
 <!-- Entry point — imports all modules and boots the app -->
 <script type="module">
   import { boot, doLogin, doLogout } from './js/auth.js';
-  import './js/sites.js';
-  import './js/pages.js';
-  import './js/checklist.js';
-  import './js/keywords.js';
-  import './js/gsc.js';
-  import './js/content.js';
-  import './js/reports.js';
-  import './js/team.js';
+  import '/js/sites.js';
+  import '/js/pages.js';
+  import '/js/checklist.js';
+  import '/js/keywords.js';
+  import '/js/gsc.js';
+  import '/js/content.js';
+  import '/js/reports.js';
+  import '/js/team.js';
 
   // Expose auth functions for inline onclick handlers in HTML
   window.doLogin  = doLogin;

@@ -1,4 +1,4 @@
-import { allPages, allChecklist, currentSiteId } from '/js/state.js';
+import * as State from '/js/state.js';
 import { setAllPages } from '/js/state.js';
 import { toast, apiFetch, scoreColor, fmtDate } from '/js/utils.js';
 import { switchTab } from '/js/app.js';
@@ -7,7 +7,7 @@ export async function loadSitePages(siteId) {
   const res = await apiFetch('/admin/sites/' + siteId + '/pages');
   if (!res) return;
   setAllPages((await res.json()).pages || []);
-  renderPages(allPages);
+  renderPages(State.allPages);
 }
 
 export function renderPages(pages) {
@@ -35,7 +35,7 @@ export function renderPages(pages) {
 export function filterPages() {
   const type  = document.getElementById('page-type-filter').value;
   const score = document.getElementById('page-score-filter').value;
-  let filtered = [...allPages];
+  let filtered = [...State.allPages];
   if (type)          filtered = filtered.filter(p => p.type === type);
   if (score==='poor') filtered = filtered.filter(p => (p.score||0) < 60);
   if (score==='ok')   filtered = filtered.filter(p => (p.score||0) >= 60 && (p.score||0) < 80);
@@ -44,7 +44,7 @@ export function filterPages() {
 }
 
 export function openPageDetail(pageId) {
-  const page = allPages.find(p => p.id === pageId);
+  const page = State.allPages.find(p => p.id === pageId);
   if (!page) return;
 
   switchTab('pages');
@@ -95,7 +95,7 @@ export function openPageDetail(pageId) {
     : `<div class="pd-issue"><span style="color:var(--green)">✅</span><span>No issues found on this page</span></div>`;
 
   // Page-scoped checklist
-  const pageChecklist = allChecklist.filter(c => c.page_url === page.url);
+  const pageChecklist = State.allChecklist.filter(c => c.page_url === page.url);
   const clTitle = document.getElementById('pd-checklist-title');
   const clList  = document.getElementById('pd-checklist-list');
   clTitle.style.display = pageChecklist.length ? '' : 'none';
@@ -121,13 +121,13 @@ export function closePageDetail() {
 export async function overridePageType(selectEl) {
   const pageId  = selectEl.dataset.pageId;
   const newType = selectEl.value;
-  if (!pageId || !currentSiteId) return;
-  const res = await apiFetch(`/admin/sites/${currentSiteId}/pages/${pageId}`, {
+  if (!pageId || !State.currentSiteId) return;
+  const res = await apiFetch(`/admin/sites/${State.currentSiteId}/pages/${pageId}`, {
     method: 'PATCH',
     body: JSON.stringify({ type: newType }),
   });
   if (!res || !res.ok) { toast('Failed to update page type'); return; }
-  const page = allPages.find(p => p.id === pageId);
+  const page = State.allPages.find(p => p.id === pageId);
   if (page) { page.type = newType; page.manually_typed = true; }
   document.getElementById('pd-type-manual-badge').style.display = '';
   toast('Page type set to ' + newType + ' — will persist through future audits');

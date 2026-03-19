@@ -3,7 +3,7 @@ import { setAllContent } from '/js/state.js';
 import { toast, apiFetch, fmtDate } from '/js/utils.js';
 
 export async function loadSiteContent(siteId) {
-  const res = await apiFetch('/admin/State.sites/' + siteId + '/content');
+  const res = await apiFetch('/admin/sites/' + siteId + '/content');
   if (!res) return;
   setAllContent((await res.json()).drafts || []);
   renderSiteContentGrid();
@@ -21,7 +21,7 @@ export function renderSiteContentGrid() {
 
 export async function loadContentPanel() {
   const siteFilter = document.getElementById('content-site-filter')?.value || '';
-  const url = siteFilter ? '/admin/State.sites/' + siteFilter + '/content' : '/admin/content';
+  const url = siteFilter ? '/admin/sites/' + siteFilter + '/content' : '/admin/content';
   const res = await apiFetch(url);
   if (!res) return;
   const drafts = (await res.json()).drafts || [];

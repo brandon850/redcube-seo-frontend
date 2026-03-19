@@ -82,6 +82,17 @@ export async function openPageDetail(pageId) {
       <div class="ci-check" onclick="toggleChecklistItem('${item.id}')">✓</div>
       <div class="ci-body"><div class="ci-text">${item.text}<span class="ci-priority priority-${item.priority||'med'}">${item.priority||'med'}</span></div></div>
     </div>`).join('');
+  // Render stored PSI data if available
+  if (page.psi_mobile || page.psi_desktop) {
+    renderPSI({ mobile: page.psi_mobile, desktop: page.psi_desktop, fetched_at: page.psi_fetched_at });
+  } else {
+    const psiContainer = document.getElementById('pd-psi');
+    if (psiContainer) psiContainer.innerHTML = '<div style="font-size:.68rem;color:var(--g2);padding:.75rem 0">No PageSpeed data yet — click Refresh PageSpeed to fetch.</div>';
+  }
+
+  // Store current page id for refresh button
+  document.getElementById('btn-refresh-psi')?.setAttribute('data-page-id', page.id);
+
   window.scrollTo({top:0,behavior:'smooth'});
 }
 
@@ -108,3 +119,121 @@ window.openPageDetail   = openPageDetail;
 window.closePageDetail  = closePageDetail;
 window.filterPages      = filterPages;
 window.overridePageType = overridePageType;
+
+// ── PageSpeed / Core Web Vitals ───────────────────
+
+export async function loadPageSpeed(siteId, pageId) {
+  const btn = document.getElementById('btn-refresh-psi');
+  if (btn) { btn.textContent = '↻ Fetching...'; btn.disabled = true; }
+  try {
+    const res = await apiFetch(`/admin/pagespeed/${siteId}/${pageId}`, { method: 'POST' });
+    if (!res || !res.ok) { toast('PageSpeed fetch failed'); return; }
+    const data = await res.json();
+    renderPSI(data.data);
+    toast('PageSpeed data updated');
+  } catch (e) {
+    toast('PageSpeed fetch failed');
+  } finally {
+    if (btn) { btn.textContent = '↻ Refresh PageSpeed'; btn.disabled = false; }
+  }
+}
+
+export function renderPSI(psi) {
+  const container = document.getElementById('pd-psi');
+  if (!container || !psi) return;
+
+  const { mobile, desktop } = psi;
+  if (!mobile && !desktop) { container.innerHTML = ''; return; }
+
+  function scoreColor(s) {
+    return s >= 90 ? '#22c55e' : s >= 50 ? '#f59e0b' : '#ef4444';
+  }
+
+  function ratingColor(r) {
+    return r === 'good' ? '#22c55e' : r === 'needs-improvement' ? '#f59e0b' : r === 'poor' ? '#ef4444' : '#666';
+  }
+
+  function fmt(val, unit) {
+    if (val === null || val === undefined) return '—';
+    if (unit === 'ms') return val >= 1000 ? (val/1000).toFixed(1)+'s' : val+'ms';
+    if (unit === 'cls') return val.toFixed(3);
+    return val;
+  }
+
+  function metricRow(label, mVal, dVal, unit, mRating, dRating) {
+    return `
+      <div style="display:grid;grid-template-columns:120px 1fr 1fr;gap:.5rem;align-items:center;padding:.4rem 0;border-bottom:1px solid var(--b3);font-size:.72rem">
+        <div style="color:var(--g3);font-weight:600;letter-spacing:.04em;text-transform:uppercase;font-size:.62rem">${label}</div>
+        <div style="font-weight:700;color:${ratingColor(mRating)}">${fmt(mVal, unit)} <span style="font-size:.58rem;opacity:.7">${mRating||''}</span></div>
+        <div style="font-weight:700;color:${ratingColor(dRating)}">${fmt(dVal, unit)} <span style="font-size:.58rem;opacity:.7">${dRating||''}</span></div>
+      </div>`;
+  }
+
+  function scoreCircle(score, label) {
+    const c = scoreColor(score);
+    return `<div style="text-align:center">
+      <div style="font-size:2rem;font-weight:900;color:${c};line-height:1">${score ?? '—'}</div>
+      <div style="font-size:.6rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--g3);margin-top:2px">${label}</div>
+    </div>`;
+  }
+
+  const diagnostics = (mobile?.diagnostics || desktop?.diagnostics || []).slice(0, 5);
+
+  container.innerHTML = `
+    <div class="pd-section-title" style="margin-top:1.5rem">Core Web Vitals</div>
+
+    <!-- Score circles -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.25rem">
+      <div style="background:var(--b2);border:1px solid var(--b3);border-radius:3px;padding:1rem;text-align:center">
+        <div style="font-size:.6rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--g2);margin-bottom:.75rem">📱 Mobile</div>
+        ${scoreCircle(mobile?.performance_score, 'Performance')}
+      </div>
+      <div style="background:var(--b2);border:1px solid var(--b3);border-radius:3px;padding:1rem;text-align:center">
+        <div style="font-size:.6rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--g2);margin-bottom:.75rem">🖥 Desktop</div>
+        ${scoreCircle(desktop?.performance_score, 'Performance')}
+      </div>
+    </div>
+
+    <!-- Metrics table -->
+    <div style="background:var(--b2);border:1px solid var(--b3);border-radius:3px;padding:.75rem 1rem;margin-bottom:1.25rem">
+      <div style="display:grid;grid-template-columns:120px 1fr 1fr;gap:.5rem;margin-bottom:.5rem">
+        <div></div>
+        <div style="font-size:.6rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--g2)">📱 Mobile</div>
+        <div style="font-size:.6rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--g2)">🖥 Desktop</div>
+      </div>
+      ${metricRow('LCP',  mobile?.lcp,  desktop?.lcp,  'ms',  mobile?.ratings?.lcp,  desktop?.ratings?.lcp)}
+      ${metricRow('INP',  mobile?.inp,  desktop?.inp,  'ms',  mobile?.ratings?.inp,  desktop?.ratings?.inp)}
+      ${metricRow('CLS',  mobile?.cls,  desktop?.cls,  'cls', mobile?.ratings?.cls,  desktop?.ratings?.cls)}
+      ${metricRow('FCP',  mobile?.fcp,  desktop?.fcp,  'ms',  mobile?.ratings?.fcp,  desktop?.ratings?.fcp)}
+      ${metricRow('TTFB', mobile?.ttfb, desktop?.ttfb, 'ms',  mobile?.ratings?.ttfb, desktop?.ratings?.ttfb)}
+      ${metricRow('TBT',  mobile?.tbt,  desktop?.tbt,  'ms',  null, null)}
+    </div>
+
+    <!-- Diagnostics -->
+    ${diagnostics.length ? `
+      <div style="font-size:.62rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--g2);margin-bottom:.5rem">Top Issues</div>
+      <div style="display:flex;flex-direction:column;gap:.4rem">
+        ${diagnostics.map(d => `
+          <div style="background:var(--b2);border:1px solid var(--b3);border-radius:3px;padding:.6rem .85rem;display:flex;align-items:flex-start;gap:.65rem">
+            <span style="color:var(--amber);flex-shrink:0;font-size:.8rem">⚠</span>
+            <div>
+              <div style="font-size:.72rem;font-weight:600;color:var(--white)">${d.title}</div>
+              ${d.savings ? `<div style="font-size:.65rem;color:var(--g3);margin-top:2px">Potential saving: ${d.savings}</div>` : ''}
+            </div>
+          </div>`).join('')}
+      </div>` : ''}
+
+    ${psi.fetched_at ? `<div style="font-size:.6rem;color:var(--g2);margin-top:.75rem;text-align:right">Last fetched: ${new Date(psi.fetched_at).toLocaleString()}</div>` : ''}
+  `;
+}
+
+window.loadPageSpeed = loadPageSpeed;
+
+export async function refreshPageSpeed() {
+  const { currentSiteId } = await import('/js/state.js');
+  const pageId = document.getElementById('btn-refresh-psi')?.getAttribute('data-page-id');
+  if (!currentSiteId || !pageId) { toast('No page selected'); return; }
+  await loadPageSpeed(currentSiteId, pageId);
+}
+
+window.refreshPageSpeed = refreshPageSpeed;

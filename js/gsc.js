@@ -1,15 +1,15 @@
-import { currentSiteId, sites } from '/js/state.js';
+import * as State from '/js/state.js';
 import { toast, apiFetch } from '/js/utils.js';
 import { loadSiteKeywords } from '/js/keywords.js';
-import { loadSites, openSiteDetail } from '/js/sites.js';
+import { loadSites, openSiteDetail } from '/js/State.sites.js';
 
 export async function connectGSC() {
-  if (!currentSiteId) return;
+  if (!State.currentSiteId) return;
   const btn = document.getElementById('btn-gsc-connect');
   btn.textContent = 'Opening Google...';
   btn.disabled = true;
 
-  const res = await apiFetch('/admin/gsc/auth-url?site_id=' + currentSiteId);
+  const res = await apiFetch('/admin/gsc/auth-url?site_id=' + State.currentSiteId);
   if (!res || !res.ok) { toast('Failed to get auth URL'); btn.textContent = '⚡ Connect GSC'; btn.disabled = false; return; }
   const { url } = await res.json();
 
@@ -20,21 +20,21 @@ export async function connectGSC() {
       btn.textContent = '⚡ Connect GSC';
       btn.disabled    = false;
       await loadSites();
-      openSiteDetail(currentSiteId);
+      openSiteDetail(State.currentSiteId);
       toast('GSC connected — click Sync GSC to import keyword data');
     }
   }, 800);
 }
 
 export async function syncGSC() {
-  if (!currentSiteId) return;
+  if (!State.currentSiteId) return;
 
-  const propRes = await apiFetch('/admin/gsc/properties/' + currentSiteId);
+  const propRes = await apiFetch('/admin/gsc/properties/' + State.currentSiteId);
   if (!propRes || !propRes.ok) { toast('Could not fetch GSC properties'); return; }
   const { properties } = await propRes.json();
   if (!properties?.length) { toast('No GSC properties found on this account'); return; }
 
-  const site        = sites.find(s => s.id === currentSiteId);
+  const site        = State.sites.find(s => s.id === State.currentSiteId);
   const current     = site?.gsc_property_url || '';
   const optionsHtml = properties.map(p =>
     `<option value="${p}" ${p===current?'selected':''}>${p}</option>`
@@ -68,7 +68,7 @@ export async function confirmGSCSync() {
   const propertyUrl = document.getElementById('gsc-property-select').value;
   closeGSCModal();
 
-  await apiFetch('/admin/gsc/property/' + currentSiteId, {
+  await apiFetch('/admin/gsc/property/' + State.currentSiteId, {
     method: 'PATCH',
     body: JSON.stringify({ property_url: propertyUrl }),
   });
@@ -77,22 +77,22 @@ export async function confirmGSCSync() {
   btn.textContent = '↻ Syncing...';
   btn.disabled    = true;
 
-  const res = await apiFetch('/admin/gsc/sync/' + currentSiteId, { method: 'POST' });
+  const res = await apiFetch('/admin/gsc/sync/' + State.currentSiteId, { method: 'POST' });
   btn.textContent = '↻ Sync GSC';
   btn.disabled    = false;
 
   if (!res || !res.ok) { toast('GSC sync failed — check Railway logs'); return; }
   const data = await res.json();
-  await loadSiteKeywords(currentSiteId);
+  await loadSiteKeywords(State.currentSiteId);
   toast(`Sync complete — ${data.updated} keywords updated, ${data.imported} imported`);
 }
 
 export async function disconnectGSC() {
-  if (!currentSiteId) return;
+  if (!State.currentSiteId) return;
   if (!confirm('Disconnect Google Search Console from this site? Keyword positions will stop updating.')) return;
-  await apiFetch('/admin/gsc/' + currentSiteId, { method: 'DELETE' });
+  await apiFetch('/admin/gsc/' + State.currentSiteId, { method: 'DELETE' });
   await loadSites();
-  openSiteDetail(currentSiteId);
+  openSiteDetail(State.currentSiteId);
   toast('GSC disconnected');
 }
 

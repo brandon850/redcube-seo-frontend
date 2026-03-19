@@ -185,6 +185,26 @@ html,body{height:100%;font-family:'Montserrat',sans-serif;background:var(--black
 .page-row-score{font-size:.85rem;font-weight:900;flex-shrink:0}
 .page-row-bar{margin-top:.6rem;background:var(--b3);height:2px}
 .page-row-fill{height:100%;transition:width 1s ease}
+.page-detail{background:var(--b1);border:1px solid var(--b3);border-radius:3px;display:none}
+.page-detail.active{display:block}
+.pd-header{padding:1.25rem 1.5rem;border-bottom:1px solid var(--b3);display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;flex-wrap:wrap}
+.pd-url{font-size:.82rem;font-weight:700;color:var(--white);word-break:break-all;margin-bottom:.25rem}
+.pd-title{font-size:.72rem;color:var(--g3);font-weight:500}
+.pd-score-big{font-size:2.5rem;font-weight:900;line-height:1;text-align:center}
+.pd-score-label{font-size:.58rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--g3);text-align:center;margin-top:.25rem}
+.pd-body{padding:1.5rem}
+.pd-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:1px;background:var(--b3);border:1px solid var(--b3);border-radius:3px;margin-bottom:1.5rem;overflow:hidden}
+.pd-metric{background:var(--b2);padding:.85rem 1rem}
+.pd-metric-label{font-size:.58rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--g2);margin-bottom:.3rem}
+.pd-metric-val{font-size:.95rem;font-weight:800;color:var(--white)}
+.pd-metric-val.pass{color:var(--green)}
+.pd-metric-val.fail{color:var(--crimson)}
+.pd-metric-val.warn{color:var(--amber)}
+.pd-section-title{font-size:.62rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--g2);padding:.5rem 0;border-bottom:1px solid var(--b3);margin-bottom:.75rem;display:flex;align-items:center;gap:.5rem}
+.pd-section-title::before{content:'';display:block;width:12px;height:2px;background:var(--red)}
+.pd-issues{display:flex;flex-direction:column;gap:.4rem;margin-bottom:1.5rem}
+.pd-issue{display:flex;align-items:flex-start;gap:.65rem;padding:.6rem .85rem;background:var(--b2);border-radius:2px;font-size:.78rem;color:var(--g4);line-height:1.5}
+.pd-checklist{display:flex;flex-direction:column;gap:.4rem}
 
 /* Checklist */
 .checklist{display:flex;flex-direction:column;gap:.4rem}
@@ -415,8 +435,7 @@ select.filter-select{background:var(--b2);border:1px solid var(--b4);border-radi
                 <div class="sdh-meta-item">Last Audit<span id="sdh-last-audit">—</span></div>
                 <div class="sdh-meta-item">Status<span id="sdh-status">—</span></div>
                 <div class="sdh-meta-item">GSC<span id="sdh-gsc-status" style="color:var(--g2)">Not connected</span></div>
-                <div class="sdh-meta-item">
-                  Max Pages
+                <div class="sdh-meta-item">Max Pages
                   <span style="display:flex;align-items:center;gap:.4rem;margin-top:2px">
                     <input type="number" id="sdh-max-pages" min="10" max="500" value="100"
                       style="width:64px;background:var(--b3);border:1px solid var(--b4);border-radius:2px;padding:.2rem .4rem;font-family:'Montserrat',sans-serif;font-size:.72rem;font-weight:700;color:var(--white);outline:none"
@@ -452,33 +471,75 @@ select.filter-select{background:var(--b2);border:1px solid var(--b4);border-radi
           </div>
 
           <div class="tab-panel active" id="tab-pages">
-            <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:1rem;flex-wrap:wrap">
-              <select class="filter-select" id="page-type-filter" onchange="filterPages()">
-                <option value="">All Types</option>
-                <option value="page">Pages</option>
-                <option value="post">Blog Posts</option>
-                <option value="landing">Landing Pages</option>
-              </select>
-              <select class="filter-select" id="page-score-filter" onchange="filterPages()">
-                <option value="">All Scores</option>
-                <option value="poor">Needs Work (&lt;60)</option>
-                <option value="ok">Okay (60–79)</option>
-                <option value="good">Good (80+)</option>
-              </select>
+
+            <!-- Pages list view -->
+            <div id="pages-list-view">
+              <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:1rem;flex-wrap:wrap">
+                <select class="filter-select" id="page-type-filter" onchange="filterPages()">
+                  <option value="">All Types</option>
+                  <option value="page">Pages</option>
+                  <option value="post">Blog Posts</option>
+                  <option value="landing">Landing Pages</option>
+                </select>
+                <select class="filter-select" id="page-score-filter" onchange="filterPages()">
+                  <option value="">All Scores</option>
+                  <option value="poor">Needs Work (&lt;60)</option>
+                  <option value="ok">Okay (60–79)</option>
+                  <option value="good">Good (80+)</option>
+                </select>
+              </div>
+              <div class="pages-list" id="pages-list"></div>
             </div>
-            <div class="pages-list" id="pages-list"></div>
+
+            <!-- Page detail view -->
+            <div id="page-detail-view" style="display:none">
+              <div style="margin-bottom:1rem">
+                <button class="btn-secondary" onclick="closePageDetail()">← Back to Pages</button>
+              </div>
+              <div class="page-detail active" id="page-detail-card">
+
+                <div class="pd-header">
+                  <div style="flex:1;min-width:0">
+                    <div class="pd-url" id="pd-url">—</div>
+                    <div class="pd-title" id="pd-title">—</div>
+                    <div style="display:flex;gap:.5rem;margin-top:.6rem;flex-wrap:wrap" id="pd-badges"></div>
+                  </div>
+                  <div>
+                    <div class="pd-score-big" id="pd-score">—</div>
+                    <div class="pd-score-label">SEO Score</div>
+                  </div>
+                </div>
+
+                <div class="pd-body">
+
+                  <!-- Metrics grid -->
+                  <div class="pd-section-title">Page Metrics</div>
+                  <div class="pd-grid" id="pd-metrics-grid"></div>
+
+                  <!-- Issues -->
+                  <div class="pd-section-title" id="pd-issues-title">Issues Found</div>
+                  <div class="pd-issues" id="pd-issues-list"></div>
+
+                  <!-- Checklist items for this page -->
+                  <div class="pd-section-title" id="pd-checklist-title">Checklist Items for This Page</div>
+                  <div class="pd-checklist" id="pd-checklist-list"></div>
+
+                </div>
+              </div>
+            </div>
+
           </div>
 
           <div class="tab-panel" id="tab-checklist">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:.5rem">
               <div style="font-size:.65rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--g3)" id="checklist-progress-label">— items remaining</div>
-              <div style="display:flex;gap:.5rem">
+              <div style="display:flex;gap:.5rem;flex-wrap:wrap">
                 <button class="btn-secondary" onclick="clearCompletedTasks()" style="color:var(--crimson);border-color:var(--crimson)">✕ Clear Completed</button>
                 <select class="filter-select" id="checklist-filter" onchange="filterChecklist()">
                   <option value="">All Items</option>
-                  <option value="high">High Priority</option>
                   <option value="pending">Pending Only</option>
                   <option value="done">Completed</option>
+                  <option value="high">High Priority</option>
                   <option value="ignored">Ignored</option>
                 </select>
               </div>
@@ -488,11 +549,19 @@ select.filter-select{background:var(--b2);border:1px solid var(--b4);border-radi
 
           <div class="tab-panel" id="tab-keywords-site">
             <div class="kw-add-row">
-              <input class="kw-input" id="kw-input-new" placeholder="Enter target keyword..." onkeydown="if(event.key==='Enter')addKeyword()">
-              <select class="filter-select" id="kw-page-assign" style="min-width:180px">
+              <input class="kw-input" id="kw-input-new" placeholder="keyword one, keyword two, keyword three..." onkeydown="if(event.key==='Enter')addKeyword()">
+              <select class="filter-select" id="kw-group-assign" style="min-width:160px">
+                <option value="">No group</option>
+              </select>
+              <select class="filter-select" id="kw-page-assign" style="min-width:220px">
                 <option value="">Assign to page (optional)</option>
               </select>
               <button class="btn-primary" onclick="addKeyword()">+ Add</button>
+            </div>
+            <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:1.5rem;flex-wrap:wrap">
+              <input class="kw-input" id="kw-new-group-name" placeholder="New group name..." style="max-width:220px">
+              <button class="btn-secondary" onclick="addKeywordGroup()">+ Create Group</button>
+              <div id="kw-groups-list" style="display:flex;gap:.5rem;flex-wrap:wrap"></div>
             </div>
             <div style="background:var(--b1);border:1px solid var(--b3);border-radius:3px;overflow:hidden">
               <table class="keyword-table"><thead><tr>
@@ -685,9 +754,8 @@ let allPages   = [];
 let allChecklist = [];
 let allKeywords = [];
 let allContent  = [];
+let allKeywordGroups = [];
 let editingDraftId = null;
-let checklistPage     = 1;
-const CHECKLIST_PER_PAGE = 25;
 
 // ════════════════════════════════════════════════════
 //  UTILS
@@ -922,9 +990,10 @@ async function openSiteDetail(siteId) {
   document.getElementById('sdh-pages').textContent      = site.pages_crawled || 0;
   document.getElementById('sdh-last-audit').textContent = fmtDate(site.last_audit);
   document.getElementById('sdh-status').textContent     = site.last_audit ? 'Active' : 'Not yet audited';
-  document.getElementById('sdh-max-pages').value = site.max_pages || 100;
 
   // GSC connection status
+  document.getElementById('sdh-max-pages').value = site.max_pages || 100;
+
   const gscStatus  = document.getElementById('sdh-gsc-status');
   const gscConnect = document.getElementById('btn-gsc-connect');
   const gscSync    = document.getElementById('btn-gsc-sync');
@@ -1000,10 +1069,101 @@ function filterPages() {
 function openPageDetail(pageId) {
   const page = allPages.find(p => p.id === pageId);
   if (!page) return;
-  // Filter checklist to this page and switch tab
-  switchTab('checklist');
-  const filtered = allChecklist.filter(c => c.page_id === pageId || !c.page_id);
-  renderChecklist(filtered);
+
+  // Switch to pages tab and show detail view
+  switchTab('pages');
+  document.getElementById('pages-list-view').style.display  = 'none';
+  document.getElementById('page-detail-view').style.display = '';
+
+  // URL and title
+  const sc = scoreColor(page.score || 0);
+  document.getElementById('pd-url').textContent   = page.url;
+  document.getElementById('pd-title').textContent = page.title || '(No title tag)';
+
+  // Score
+  const scoreEl = document.getElementById('pd-score');
+  scoreEl.textContent  = page.score || '—';
+  scoreEl.style.color  = sc;
+
+  // Type + status badges
+  const typeClass = page.type === 'post' ? 'type-post' : page.type === 'landing' ? 'type-landing' : 'type-page';
+  const typeLabel = page.type === 'post' ? 'Blog Post' : page.type === 'landing' ? 'Landing Page' : 'Page';
+  document.getElementById('pd-badges').innerHTML = `
+    <span class="page-row-type ${typeClass}">${typeLabel}</span>
+    ${page.is_https  ? '<span class="cat-badge badge-great">HTTPS</span>'       : '<span class="cat-badge badge-poor">No HTTPS</span>'}
+    ${page.is_mobile ? '<span class="cat-badge badge-great">Mobile OK</span>'   : '<span class="cat-badge badge-poor">Not Mobile</span>'}
+    ${page.has_h1    ? '<span class="cat-badge badge-great">Has H1</span>'      : '<span class="cat-badge badge-poor">No H1</span>'}
+    ${page.has_meta  ? '<span class="cat-badge badge-great">Has Meta Desc</span>' : '<span class="cat-badge badge-poor">No Meta Desc</span>'}
+  `;
+
+  // Metrics grid
+  const metrics = [
+    { label: 'Word Count',    val: page.word_count || 0,  status: (page.word_count || 0) >= 300 ? 'pass' : 'warn' },
+    { label: 'HTTPS',         val: page.is_https   ? 'Yes' : 'No',   status: page.is_https   ? 'pass' : 'fail' },
+    { label: 'Mobile Ready',  val: page.is_mobile  ? 'Yes' : 'No',   status: page.is_mobile  ? 'pass' : 'fail' },
+    { label: 'H1 Tag',        val: page.has_h1     ? 'Yes' : 'No',   status: page.has_h1     ? 'pass' : 'fail' },
+    { label: 'Meta Desc',     val: page.has_meta   ? 'Yes' : 'No',   status: page.has_meta   ? 'pass' : 'fail' },
+    { label: 'H1 Text',       val: page.h1_text    ? page.h1_text.slice(0, 40) + (page.h1_text.length > 40 ? '…' : '') : '—', status: page.h1_text ? 'pass' : 'warn' },
+  ];
+  document.getElementById('pd-metrics-grid').innerHTML = metrics.map(m => `
+    <div class="pd-metric">
+      <div class="pd-metric-label">${m.label}</div>
+      <div class="pd-metric-val ${m.status}">${m.val}</div>
+    </div>`).join('');
+
+  // Issues
+  const issues = page.issues || [];
+  const issuesTitle = document.getElementById('pd-issues-title');
+  const issuesList  = document.getElementById('pd-issues-list');
+  if (issues.length) {
+    issuesTitle.style.display = '';
+    issuesList.innerHTML = issues.map(issue => `
+      <div class="pd-issue">
+        <span style="color:var(--crimson);flex-shrink:0">❌</span>
+        <span>${issue}</span>
+      </div>`).join('');
+  } else {
+    issuesTitle.style.display = 'none';
+    issuesList.innerHTML = `<div class="pd-issue"><span style="color:var(--green)">✅</span><span>No issues found on this page</span></div>`;
+  }
+
+  // Checklist items scoped to this page
+  const pageChecklist = allChecklist.filter(c =>
+    c.page_url === page.url || (!c.page_url && false) // only show items tied to this specific page
+  );
+  const clTitle = document.getElementById('pd-checklist-title');
+  const clList  = document.getElementById('pd-checklist-list');
+  if (pageChecklist.length) {
+    clTitle.style.display = '';
+    clList.innerHTML = pageChecklist.map(item => `
+      <div class="checklist-item ${item.done ? 'done' : ''} ${item.ignored ? 'ignored' : ''}"
+           id="ci-${item.id}" style="${item.ignored ? 'opacity:.35' : ''}">
+        <div class="ci-check" onclick="toggleChecklistItem('${item.id}')">✓</div>
+        <div class="ci-body">
+          <div class="ci-text">
+            ${item.text}
+            <span class="ci-priority priority-${item.priority || 'med'}">${item.priority || 'med'}</span>
+          </div>
+          ${item.done && item.completed_at ? `<div class="ci-meta">Completed ${fmtDate(item.completed_at)}</div>` : ''}
+        </div>
+        <button class="action-btn ${item.ignored ? '' : 'danger'}"
+          onclick="toggleIgnoreItem('${item.id}', ${!item.ignored})"
+          style="flex-shrink:0;font-size:.6rem;padding:.25rem .55rem">
+          ${item.ignored ? 'Unignore' : 'Ignore'}
+        </button>
+      </div>`).join('');
+  } else {
+    clTitle.style.display = 'none';
+    clList.innerHTML = '';
+  }
+
+  // Scroll to top of detail
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function closePageDetail() {
+  document.getElementById('pages-list-view').style.display  = '';
+  document.getElementById('page-detail-view').style.display = 'none';
 }
 
 // ════════════════════════════════════════════════════
@@ -1024,13 +1184,11 @@ function renderChecklist(items) {
     updateChecklistProgress();
     return;
   }
-
   const totalPages = Math.ceil(items.length / CHECKLIST_PER_PAGE);
   checklistPage    = Math.min(checklistPage, totalPages);
   const start      = (checklistPage - 1) * CHECKLIST_PER_PAGE;
   const pageItems  = items.slice(start, start + CHECKLIST_PER_PAGE);
 
-  // Group current page items by category
   const groups = {};
   pageItems.forEach(item => {
     const g = item.category || 'General';
@@ -1062,38 +1220,41 @@ function renderChecklist(items) {
         </div>`).join('')}
     </div>`).join('');
 
-  // Pagination controls
   if (totalPages > 1) {
-    const paginationHtml = `
+    container.insertAdjacentHTML('beforeend', `
       <div style="display:flex;align-items:center;justify-content:space-between;margin-top:1rem;padding-top:1rem;border-top:1px solid var(--b3)">
         <div style="font-size:.65rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--g3)">
           Showing ${start + 1}–${Math.min(start + CHECKLIST_PER_PAGE, items.length)} of ${items.length} items
         </div>
         <div style="display:flex;align-items:center;gap:.4rem">
-          <button class="action-btn" onclick="goChecklistPage(1)" ${checklistPage === 1 ? 'disabled' : ''} title="First">«</button>
-          <button class="action-btn" onclick="goChecklistPage(${checklistPage - 1})" ${checklistPage === 1 ? 'disabled' : ''} title="Previous">‹</button>
-          ${Array.from({ length: totalPages }, (_, i) => i + 1)
-            .filter(p => p === 1 || p === totalPages || Math.abs(p - checklistPage) <= 2)
-            .reduce((acc, p, i, arr) => {
-              if (i > 0 && p - arr[i-1] > 1) acc.push('...');
-              acc.push(p);
-              return acc;
-            }, [])
-            .map(p => p === '...'
+          <button class="action-btn" onclick="goChecklistPage(1)" ${checklistPage===1?'disabled':''}>«</button>
+          <button class="action-btn" onclick="goChecklistPage(${checklistPage-1})" ${checklistPage===1?'disabled':''}>‹</button>
+          ${Array.from({length:totalPages},(_,i)=>i+1)
+            .filter(p=>p===1||p===totalPages||Math.abs(p-checklistPage)<=2)
+            .reduce((acc,p,i,arr)=>{if(i>0&&p-arr[i-1]>1)acc.push('...');acc.push(p);return acc;},[])
+            .map(p=>p==='...'
               ? `<span style="font-size:.65rem;color:var(--g2);padding:0 .25rem">…</span>`
-              : `<button class="action-btn ${p === checklistPage ? 'active' : ''}"
-                   onclick="goChecklistPage(${p})"
-                   style="${p === checklistPage ? 'border-color:var(--red);color:var(--red)' : ''}">${p}</button>`
+              : `<button class="action-btn" onclick="goChecklistPage(${p})"
+                   style="${p===checklistPage?'border-color:var(--red);color:var(--red)':''}">${p}</button>`
             ).join('')}
-          <button class="action-btn" onclick="goChecklistPage(${checklistPage + 1})" ${checklistPage === totalPages ? 'disabled' : ''} title="Next">›</button>
-          <button class="action-btn" onclick="goChecklistPage(${totalPages})" ${checklistPage === totalPages ? 'disabled' : ''} title="Last">»</button>
+          <button class="action-btn" onclick="goChecklistPage(${checklistPage+1})" ${checklistPage===totalPages?'disabled':''}>›</button>
+          <button class="action-btn" onclick="goChecklistPage(${totalPages})" ${checklistPage===totalPages?'disabled':''}>»</button>
         </div>
-      </div>`;
-    container.insertAdjacentHTML('beforeend', paginationHtml);
+      </div>`);
   }
-
   updateChecklistProgress();
 }
+
+function updateChecklistProgress() {
+  const total   = allChecklist.length;
+  const done    = allChecklist.filter(c => c.done).length;
+  const pending = total - done;
+  document.getElementById('checklist-progress-label').textContent =
+    total ? `${done} of ${total} complete — ${pending} remaining` : 'No items';
+}
+
+let checklistPage        = 1;
+const CHECKLIST_PER_PAGE = 25;
 
 function goChecklistPage(page) {
   checklistPage = page;
@@ -1104,15 +1265,7 @@ function goChecklistPage(page) {
   if (f === 'high')    filtered = filtered.filter(c => c.priority === 'high');
   if (f === 'ignored') filtered = filtered.filter(c => c.ignored);
   renderChecklist(filtered);
-  document.getElementById('tab-checklist').scrollIntoView({ behavior: 'smooth', block: 'start' });
-}
-
-function updateChecklistProgress() {
-  const total   = allChecklist.length;
-  const done    = allChecklist.filter(c => c.done).length;
-  const pending = total - done;
-  document.getElementById('checklist-progress-label').textContent =
-    total ? `${done} of ${total} complete — ${pending} remaining` : 'No items';
+  document.getElementById('tab-checklist')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 async function toggleChecklistItem(itemId) {
@@ -1132,25 +1285,6 @@ async function toggleChecklistItem(itemId) {
   });
 }
 
-async function toggleIgnoreItem(itemId, ignored) {
-  const item = allChecklist.find(c => c.id === itemId);
-  if (!item) return;
-  item.ignored = ignored;
-
-  const el = document.getElementById('ci-' + itemId);
-  if (el) {
-    el.style.opacity = ignored ? '.35' : '1';
-    el.classList.toggle('ignored', ignored);
-  }
-
-  await apiFetch('/admin/checklist/' + itemId + '/ignore', {
-    method: 'PATCH',
-    body: JSON.stringify({ ignored })
-  });
-
-  toast(ignored ? 'Item ignored — won\'t reappear after next audit' : 'Item unignored');
-}
-
 function filterChecklist() {
   checklistPage = 1;
   const f = document.getElementById('checklist-filter').value;
@@ -1162,22 +1296,44 @@ function filterChecklist() {
   renderChecklist(filtered);
 }
 
+// ════════════════════════════════════════════════════
+//  AUDIT
+// ════════════════════════════════════════════════════
+async function toggleIgnoreItem(itemId, ignored) {
+  const item = allChecklist.find(c => c.id === itemId);
+  if (!item) return;
+  item.ignored = ignored;
+  const el = document.getElementById('ci-' + itemId);
+  if (el) el.style.opacity = ignored ? '.35' : '1';
+  await apiFetch('/admin/checklist/' + itemId + '/ignore', {
+    method: 'PATCH',
+    body: JSON.stringify({ ignored })
+  });
+  toast(ignored ? "Item ignored — won't reappear after next audit" : 'Item unignored');
+}
+
 async function clearCompletedTasks() {
   const doneCount = allChecklist.filter(c => c.done).length;
   if (!doneCount) { toast('No completed tasks to clear'); return; }
   if (!confirm(`Remove ${doneCount} completed task${doneCount !== 1 ? 's' : ''}? This cannot be undone.`)) return;
-
   const res = await apiFetch('/admin/checklist/completed/' + currentSiteId, { method: 'DELETE' });
   if (!res || !res.ok) { toast('Failed to clear tasks'); return; }
-
   allChecklist = allChecklist.filter(c => !c.done);
   renderChecklist(allChecklist);
   toast(doneCount + ' completed task' + (doneCount !== 1 ? 's' : '') + ' cleared');
 }
 
-// ════════════════════════════════════════════════════
-//  AUDIT
-// ════════════════════════════════════════════════════
+async function saveMaxPages(val) {
+  if (!currentSiteId) return;
+  await apiFetch('/admin/sites/' + currentSiteId + '/settings', {
+    method: 'PATCH',
+    body: JSON.stringify({ max_pages: parseInt(val) })
+  });
+  const site = sites.find(s => s.id === currentSiteId);
+  if (site) site.max_pages = parseInt(val);
+  toast('Crawl limit updated to ' + val + ' pages');
+}
+
 async function runFullAudit() {
   if (!currentSiteId) return;
   const site = sites.find(s => s.id === currentSiteId);
@@ -1249,49 +1405,143 @@ async function runFullAudit() {
 //  KEYWORDS
 // ════════════════════════════════════════════════════
 async function loadSiteKeywords(siteId) {
-  const res = await apiFetch('/admin/sites/' + siteId + '/keywords');
-  if (!res) return;
-  allKeywords = (await res.json()).keywords || [];
+  const [kwRes, grpRes, pageRes] = await Promise.all([
+    apiFetch('/admin/sites/' + siteId + '/keywords'),
+    apiFetch('/admin/sites/' + siteId + '/keyword-groups'),
+    apiFetch('/admin/sites/' + siteId + '/pages'),
+  ]);
+  if (!kwRes || !grpRes || !pageRes) return;
+  allKeywords      = (await kwRes.json()).keywords  || [];
+  allKeywordGroups = (await grpRes.json()).groups   || [];
+  allPages         = (await pageRes.json()).pages   || [];
   renderSiteKeywords();
+  populateGroupDropdown();
+  populateKeywordPageDropdown();
 }
 
 function renderSiteKeywords() {
+  renderGroupPills();
   const tbody = document.getElementById('keywords-tbody');
   if (!allKeywords.length) {
-    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--g2);font-size:.72rem;text-transform:uppercase;letter-spacing:.06em">No keywords tracked yet — add your first keyword above</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--g2);font-size:.72rem;text-transform:uppercase;letter-spacing:.06em">No keywords tracked yet</td></tr>`;
     return;
   }
-  tbody.innerHTML = allKeywords.map(kw => {
-    const changeVal = kw.position_change || 0;
-    const changeClass = changeVal > 0 ? 'rank-up' : changeVal < 0 ? 'rank-down' : 'rank-same';
-    const changeStr = changeVal > 0 ? `↑${changeVal}` : changeVal < 0 ? `↓${Math.abs(changeVal)}` : '—';
-    return `<tr>
-      <td style="font-weight:600;color:var(--white)">${kw.keyword}</td>
-      <td style="color:var(--g4);font-size:.68rem">${kw.page_url || '—'}</td>
-      <td style="font-weight:700;color:var(--white)">${kw.current_position || '—'}</td>
-      <td class="rank-change ${changeClass}">${changeStr}</td>
-      <td style="color:var(--g4)">${kw.search_volume ? kw.search_volume.toLocaleString() : '—'}</td>
-      <td style="color:var(--g4)">${kw.difficulty || '—'}</td>
-      <td><button class="action-btn danger" onclick="deleteKeyword('${kw.id}')">✕</button></td>
-    </tr>`;
-  }).join('');
+  const grouped   = {};
+  const ungrouped = [];
+  allKeywords.forEach(kw => {
+    if (kw.group_id) {
+      if (!grouped[kw.group_id]) grouped[kw.group_id] = [];
+      grouped[kw.group_id].push(kw);
+    } else { ungrouped.push(kw); }
+  });
+  let html = '';
+  allKeywordGroups.forEach(g => {
+    const kws = grouped[g.id] || [];
+    if (!kws.length) return;
+    html += `<tr><td colspan="7" style="padding:.5rem .85rem;background:var(--b2);font-size:.6rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--red);border-bottom:1px solid var(--b3)">${g.name} (${kws.length})</td></tr>`;
+    html += kws.map(kw => keywordRow(kw)).join('');
+  });
+  if (ungrouped.length) {
+    if (allKeywordGroups.length) {
+      html += `<tr><td colspan="7" style="padding:.5rem .85rem;background:var(--b2);font-size:.6rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--g2);border-bottom:1px solid var(--b3)">Ungrouped (${ungrouped.length})</td></tr>`;
+    }
+    html += ungrouped.map(kw => keywordRow(kw)).join('');
+  }
+  tbody.innerHTML = html;
+}
+
+function keywordRow(kw) {
+  const changeVal   = kw.position_change || 0;
+  const changeClass = changeVal > 0 ? 'rank-up' : changeVal < 0 ? 'rank-down' : 'rank-same';
+  const changeStr   = changeVal > 0 ? `↑${changeVal}` : changeVal < 0 ? `↓${Math.abs(changeVal)}` : '—';
+  return `<tr>
+    <td style="font-weight:600;color:var(--white)">${kw.keyword}</td>
+    <td style="color:var(--g4);font-size:.68rem">${kw.page_url || '—'}</td>
+    <td style="font-weight:700;color:var(--white)">${kw.current_position || '—'}</td>
+    <td class="rank-change ${changeClass}">${changeStr}</td>
+    <td style="color:var(--g4)">${kw.search_volume ? kw.search_volume.toLocaleString() : '—'}</td>
+    <td style="color:var(--g4)">${kw.difficulty || '—'}</td>
+    <td><button class="action-btn danger" onclick="deleteKeyword('${kw.id}')">✕</button></td>
+  </tr>`;
 }
 
 async function addKeyword() {
-  const kw   = document.getElementById('kw-input-new').value.trim();
-  const page = document.getElementById('kw-page-assign').value;
-  if (!kw || !currentSiteId) return;
-
+  const raw     = document.getElementById('kw-input-new').value.trim();
+  const page    = document.getElementById('kw-page-assign')?.value    || '';
+  const groupId = document.getElementById('kw-group-assign')?.value   || '';
+  if (!raw || !currentSiteId) return;
   const res = await apiFetch('/admin/sites/' + currentSiteId + '/keywords', {
     method: 'POST',
-    body: JSON.stringify({ keyword: kw, page_url: page || null })
+    body: JSON.stringify({ keyword: raw, page_url: page || null, group_id: groupId || null })
   });
-  if (!res || !res.ok) { toast('Failed to add keyword'); return; }
-  const data = await res.json();
-  allKeywords.unshift(data.keyword);
+  if (!res || !res.ok) { toast('Failed to add keywords'); return; }
+  const data  = await res.json();
+  const added = data.keywords?.length || 0;
+  allKeywords.unshift(...(data.keywords || []));
   renderSiteKeywords();
   document.getElementById('kw-input-new').value = '';
-  toast('Keyword added — position tracking starts next sync');
+  toast(added + ' keyword' + (added !== 1 ? 's' : '') + ' added');
+}
+
+async function addKeywordGroup() {
+  const name = document.getElementById('kw-new-group-name').value.trim();
+  if (!name || !currentSiteId) return;
+  const res = await apiFetch('/admin/sites/' + currentSiteId + '/keyword-groups', {
+    method: 'POST',
+    body: JSON.stringify({ name })
+  });
+  if (!res || !res.ok) { toast('Failed to create group'); return; }
+  const data = await res.json();
+  allKeywordGroups.push(data.group);
+  populateGroupDropdown();
+  renderGroupPills();
+  document.getElementById('kw-new-group-name').value = '';
+  toast('Group "' + name + '" created');
+}
+
+async function deleteKeywordGroup(groupId, name) {
+  if (!confirm('Delete group "' + name + '"? Keywords will become ungrouped.')) return;
+  await apiFetch('/admin/sites/' + currentSiteId + '/keyword-groups/' + groupId, { method: 'DELETE' });
+  allKeywordGroups = allKeywordGroups.filter(g => g.id !== groupId);
+  allKeywords.forEach(k => { if (k.group_id === groupId) k.group_id = null; });
+  populateGroupDropdown();
+  renderGroupPills();
+  renderSiteKeywords();
+  toast('Group deleted');
+}
+
+function populateGroupDropdown() {
+  const sel = document.getElementById('kw-group-assign');
+  if (!sel) return;
+  sel.innerHTML = '<option value="">No group</option>';
+  allKeywordGroups.forEach(g => {
+    const o = document.createElement('option');
+    o.value = g.id; o.textContent = g.name;
+    sel.appendChild(o);
+  });
+}
+
+function renderGroupPills() {
+  const container = document.getElementById('kw-groups-list');
+  if (!container) return;
+  container.innerHTML = allKeywordGroups.map(g => `
+    <span style="display:inline-flex;align-items:center;gap:.4rem;background:var(--b3);border:1px solid var(--b5);border-radius:3px;padding:.25rem .65rem;font-size:.65rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--g4)">
+      ${g.name}
+      <span onclick="deleteKeywordGroup('${g.id}','${g.name.replace(/'/g,"\'")}')" style="cursor:pointer;color:var(--g2);font-size:.7rem;margin-left:2px" title="Delete group">✕</span>
+    </span>`).join('');
+}
+
+function populateKeywordPageDropdown() {
+  const sel = document.getElementById('kw-page-assign');
+  if (!sel) return;
+  sel.innerHTML = '<option value="">Assign to page (optional)</option>';
+  allPages.forEach(p => {
+    const o    = document.createElement('option');
+    o.value    = p.url;
+    const path = (() => { try { return new URL(p.url).pathname; } catch { return p.url; } })();
+    o.textContent = (p.title ? p.title + '  —  ' : '') + path;
+    sel.appendChild(o);
+  });
 }
 
 async function deleteKeyword(kwId) {
@@ -1478,18 +1728,6 @@ function scoreContent() {
   renderChecks(readChecks, 'readability-checks');
 }
 
-async function saveMaxPages(val) {
-  if (!currentSiteId) return;
-  await apiFetch('/admin/sites/' + currentSiteId + '/settings', {
-    method: 'PATCH',
-    body: JSON.stringify({ max_pages: parseInt(val) })
-  });
-  // Update local state
-  const site = sites.find(s => s.id === currentSiteId);
-  if (site) site.max_pages = parseInt(val);
-  toast('Crawl limit updated to ' + val + ' pages');
-}
-
 // ════════════════════════════════════════════════════
 //  REPORTS
 // ════════════════════════════════════════════════════
@@ -1519,6 +1757,7 @@ async function loadReports() {
       <div style="display:flex;gap:.5rem">
         <a class="btn-secondary" href="${r.public_url}" target="_blank" style="text-decoration:none;display:inline-flex;align-items:center;padding:.5rem 1rem;font-size:.65rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--g4);border:1px solid var(--b4);border-radius:3px">View Report ↗</a>
         <button class="btn-secondary" onclick="copyReportLink('${r.public_url}')">Copy Link</button>
+        <button class="action-btn danger" onclick="deleteReport('${r.id}')">Delete</button>
       </div>
     </div>`;
   }).join('');
@@ -1557,25 +1796,21 @@ async function connectGSC() {
 
 async function syncGSC() {
   if (!currentSiteId) return;
-
-  // First, fetch available properties so user can confirm the right one
   const propRes = await apiFetch('/admin/gsc/properties/' + currentSiteId);
   if (!propRes || !propRes.ok) { toast('Could not fetch GSC properties'); return; }
   const { properties } = await propRes.json();
+  if (!properties || !properties.length) { toast('No GSC properties found on this account'); return; }
 
-  if (!properties || !properties.length) {
-    toast('No GSC properties found on this account');
-    return;
-  }
-
-  // Show a simple select dialog
-  const site       = sites.find(s => s.id === currentSiteId);
-  const current    = site?.gsc_property_url || '';
+  const site        = sites.find(s => s.id === currentSiteId);
+  const current     = site?.gsc_property_url || '';
   const optionsHtml = properties.map(p =>
     `<option value="${p}" ${p === current ? 'selected' : ''}>${p}</option>`
   ).join('');
 
-  const modalHtml = `
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.id = 'gsc-modal-overlay';
+  overlay.innerHTML = `
     <div class="modal" style="max-width:440px">
       <div class="modal-title">Select GSC Property</div>
       <div class="modal-sub">Choose the property that matches this site.</div>
@@ -1588,12 +1823,6 @@ async function syncGSC() {
         <button class="btn-primary" onclick="confirmGSCSync()">Sync This Property →</button>
       </div>
     </div>`;
-
-  // Show inline modal
-  const overlay = document.createElement('div');
-  overlay.className = 'modal-overlay';
-  overlay.id = 'gsc-modal-overlay';
-  overlay.innerHTML = modalHtml;
   document.body.appendChild(overlay);
 }
 
@@ -1605,26 +1834,20 @@ function closeGSCModal() {
 async function confirmGSCSync() {
   const propertyUrl = document.getElementById('gsc-property-select').value;
   closeGSCModal();
-
-  // Save the selected property
   await apiFetch('/admin/gsc/property/' + currentSiteId, {
     method: 'PATCH',
     body: JSON.stringify({ property_url: propertyUrl })
   });
-
-  // Now run the sync
   const btn = document.getElementById('btn-gsc-sync');
   btn.textContent = '↻ Syncing...';
   btn.disabled = true;
-
   const res = await apiFetch('/admin/gsc/sync/' + currentSiteId, { method: 'POST' });
   btn.textContent = '↻ Sync GSC';
   btn.disabled = false;
-
   if (!res || !res.ok) { toast('GSC sync failed — check Railway logs'); return; }
   const data = await res.json();
   await loadSiteKeywords(currentSiteId);
-  toast(`Sync complete — ${data.updated} keywords updated, ${data.imported} new keywords imported`);
+  toast(`Sync complete — ${data.updated} keywords updated, ${data.imported} imported`);
 }
 
 async function disconnectGSC() {
@@ -1647,6 +1870,14 @@ async function generateClientReport() {
 
 function copyReportLink(url) {
   navigator.clipboard.writeText(url).then(() => toast('Link copied to clipboard'));
+}
+
+async function deleteReport(reportId) {
+  if (!confirm('Delete this report? The public link will stop working.')) return;
+  const res = await apiFetch('/admin/reports/' + reportId, { method: 'DELETE' });
+  if (!res || !res.ok) { toast('Failed to delete report'); return; }
+  toast('Report deleted');
+  loadReports();
 }
 
 // ════════════════════════════════════════════════════

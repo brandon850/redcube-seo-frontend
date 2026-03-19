@@ -1,5 +1,3 @@
-import * as State from '/js/state.js';
-
 export function toast(msg, dur = 3500) {
   const t = document.getElementById('toast');
   t.textContent = msg;
@@ -17,8 +15,7 @@ export function openModal(id)  { document.getElementById(id).classList.remove('h
 export function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
 
 export function gradeColor(g) {
-  return { 'A+':'#22c55e','A':'#22c55e','B+':'#84cc16','B':'#84cc16',
-           'C+':'#f59e0b','C':'#f97316','D':'#ef4444','F':'#dc2626' }[g] || '#888';
+  return {'A+':'#22c55e','A':'#22c55e','B+':'#84cc16','B':'#84cc16','C+':'#f59e0b','C':'#f97316','D':'#ef4444','F':'#dc2626'}[g] || '#888';
 }
 
 export function scoreColor(s) {
@@ -42,20 +39,11 @@ export function fmtDate(dateStr) {
 }
 
 export async function apiFetch(path, opts = {}) {
-  // Read current token from state module at call time (not cached at import time)
-  const token = State.authToken;
-  const res   = await fetch(State.API + path, {
+  const { authToken, API } = await import('/js/state.js');
+  const res = await fetch(API + path, {
     ...opts,
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer ' + token,
-      ...(opts.headers || {}),
-    },
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + authToken, ...(opts.headers || {}) },
   });
-  if (res.status === 401) {
-    const { doLogout } = await import('/js/auth.js');
-    doLogout();
-    return null;
-  }
+  if (res.status === 401) { const { doLogout } = await import('/js/auth.js'); doLogout(); return null; }
   return res;
 }

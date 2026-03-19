@@ -503,6 +503,16 @@ select.filter-select{background:var(--b2);border:1px solid var(--b4);border-radi
                     <div class="pd-url" id="pd-url">—</div>
                     <div class="pd-title" id="pd-title">—</div>
                     <div style="display:flex;gap:.5rem;margin-top:.6rem;flex-wrap:wrap" id="pd-badges"></div>
+                    <div style="display:flex;align-items:center;gap:.5rem;margin-top:.75rem">
+                      <span style="font-size:.6rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--g3)">Page Type:</span>
+                      <select id="pd-type-override" onchange="overridePageType(this)"
+                        style="background:var(--b3);border:1px solid var(--b4);border-radius:3px;padding:.3rem .6rem;font-family:'Montserrat',sans-serif;font-size:.68rem;font-weight:700;color:var(--white);outline:none;cursor:pointer">
+                        <option value="page">Page</option>
+                        <option value="post">Blog Post</option>
+                        <option value="landing">Landing Page</option>
+                      </select>
+                      <span id="pd-type-manual-badge" style="display:none;font-size:.58rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:.15rem .55rem;background:rgba(59,130,246,.12);color:#60a5fa;border:1px solid rgba(59,130,246,.2);border-radius:2px">Manually Set</span>
+                    </div>
                   </div>
                   <div>
                     <div class="pd-score-big" id="pd-score">—</div>
@@ -1095,6 +1105,9 @@ function openPageDetail(pageId) {
     ${page.has_h1    ? '<span class="cat-badge badge-great">Has H1</span>'      : '<span class="cat-badge badge-poor">No H1</span>'}
     ${page.has_meta  ? '<span class="cat-badge badge-great">Has Meta Desc</span>' : '<span class="cat-badge badge-poor">No Meta Desc</span>'}
   `;
+  document.getElementById('pd-type-override').value = page.type || 'page';
+  document.getElementById('pd-type-override').dataset.pageId = page.id;
+  document.getElementById('pd-type-manual-badge').style.display = page.manually_typed ? '' : 'none';
 
   // Metrics grid
   const metrics = [
@@ -1159,6 +1172,25 @@ function openPageDetail(pageId) {
 
   // Scroll to top of detail
   window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+async function overridePageType(selectEl) {
+  const pageId  = selectEl.dataset.pageId;
+  const newType = selectEl.value;
+  if (!pageId || !currentSiteId) return;
+
+  const res = await apiFetch(`/admin/sites/${currentSiteId}/pages/${pageId}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ type: newType })
+  });
+  if (!res || !res.ok) { toast('Failed to update page type'); return; }
+
+  // Update local state
+  const page = allPages.find(p => p.id === pageId);
+  if (page) { page.type = newType; page.manually_typed = true; }
+
+  document.getElementById('pd-type-manual-badge').style.display = '';
+  toast('Page type set to ' + newType + ' — will persist through future audits');
 }
 
 function closePageDetail() {

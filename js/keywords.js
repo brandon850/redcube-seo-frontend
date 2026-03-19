@@ -4,9 +4,9 @@ import { toast, apiFetch, fmtDate } from '/js/utils.js';
 
 export async function loadSiteKeywords(siteId) {
   const [kwRes, grpRes, pageRes] = await Promise.all([
-    apiFetch('/admin/State.sites/' + siteId + '/keywords'),
-    apiFetch('/admin/State.sites/' + siteId + '/keyword-groups'),
-    apiFetch('/admin/State.sites/' + siteId + '/pages'),
+    apiFetch('/admin/sites/' + siteId + '/keywords'),
+    apiFetch('/admin/sites/' + siteId + '/keyword-groups'),
+    apiFetch('/admin/sites/' + siteId + '/pages'),
   ]);
   if (!kwRes || !grpRes || !pageRes) return;
   setAllKeywords((await kwRes.json()).keywords   || []);
@@ -63,7 +63,7 @@ export async function addKeyword() {
   const page    = document.getElementById('kw-page-assign')?.value   || '';
   const groupId = document.getElementById('kw-group-assign')?.value  || '';
   if (!raw || !State.currentSiteId) return;
-  const res = await apiFetch('/admin/State.sites/' + State.currentSiteId + '/keywords', {
+  const res = await apiFetch('/admin/sites/' + State.currentSiteId + '/keywords', {
     method: 'POST',
     body: JSON.stringify({ keyword: raw, page_url: page||null, group_id: groupId||null }),
   });
@@ -85,7 +85,7 @@ export async function deleteKeyword(kwId) {
 export async function addKeywordGroup() {
   const name = document.getElementById('kw-new-group-name').value.trim();
   if (!name || !State.currentSiteId) return;
-  const res = await apiFetch('/admin/State.sites/' + State.currentSiteId + '/keyword-groups', {
+  const res = await apiFetch('/admin/sites/' + State.currentSiteId + '/keyword-groups', {
     method: 'POST',
     body: JSON.stringify({ name }),
   });
@@ -100,7 +100,7 @@ export async function addKeywordGroup() {
 
 export async function deleteKeywordGroup(groupId, name) {
   if (!confirm('Delete group "' + name + '"? Keywords will become ungrouped.')) return;
-  await apiFetch('/admin/State.sites/' + State.currentSiteId + '/keyword-groups/' + groupId, { method: 'DELETE' });
+  await apiFetch('/admin/sites/' + State.currentSiteId + '/keyword-groups/' + groupId, { method: 'DELETE' });
   setAllKeywordGroups(State.allKeywordGroups.filter(g => g.id !== groupId));
   State.allKeywords.forEach(k => { if (k.group_id === groupId) k.group_id = null; });
   populateGroupDropdown();
@@ -145,7 +145,7 @@ export function populateKeywordPageDropdown() {
 
 export async function loadKeywordsPanel() {
   const siteFilter = document.getElementById('kw-site-filter')?.value || '';
-  const url = siteFilter ? '/admin/State.sites/' + siteFilter + '/keywords' : '/admin/keywords';
+  const url = siteFilter ? '/admin/sites/' + siteFilter + '/keywords' : '/admin/keywords';
   const res = await apiFetch(url);
   if (!res) return;
   const kws   = (await res.json()).keywords || [];

@@ -1,4 +1,4 @@
-import { toast, apiFetch, relativeTime, openModal, closeModal } from './utils.js';
+import { toast, apiFetch, relativeTime, openModal, closeModal } from '/js/utils.js';
 
 export async function loadTeam() {
   const res = await apiFetch('/admin/team');

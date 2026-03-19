@@ -1,4 +1,3 @@
-<style>
 :root {
   --red:     #CC0000;
   --red-h:   #aa0000;
@@ -311,4 +310,3 @@ select.filter-select{background:var(--b2);border:1px solid var(--b4);border-radi
   .content{padding:1rem}
   .editor-seo{grid-template-columns:1fr}
 }
-</style>

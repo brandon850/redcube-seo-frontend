@@ -3,7 +3,7 @@ import { toast, apiFetch, gradeColor, fmtDate } from '/js/utils.js';
 
 export async function loadReports() {
   const siteFilter = document.getElementById('report-site-filter')?.value || '';
-  const url = siteFilter ? '/admin/State.sites/' + siteFilter + '/reports' : '/admin/reports';
+  const url = siteFilter ? '/admin/sites/' + siteFilter + '/reports' : '/admin/reports';
   const res = await apiFetch(url);
   if (!res) return;
   const reports   = (await res.json()).reports || [];
@@ -37,7 +37,7 @@ export async function loadReports() {
 
 export async function generateClientReport() {
   if (!State.currentSiteId) return;
-  const res = await apiFetch('/admin/State.sites/' + State.currentSiteId + '/reports', { method: 'POST' });
+  const res = await apiFetch('/admin/sites/' + State.currentSiteId + '/reports', { method: 'POST' });
   if (!res || !res.ok) { toast('Failed to generate report'); return; }
   const data = await res.json();
   toast('Report generated!');

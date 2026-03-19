@@ -1,4 +1,5 @@
-import { allChecklist, currentSiteId, checklistPage, CHECKLIST_PER_PAGE } from '/js/state.js';
+import * as State from '/js/state.js';
+import { CHECKLIST_PER_PAGE } from '/js/state.js';
 import { setAllChecklist, setChecklistPage } from '/js/state.js';
 import { toast, apiFetch, fmtDate } from '/js/utils.js';
 
@@ -6,7 +7,7 @@ export async function loadSiteChecklist(siteId) {
   const res = await apiFetch('/admin/sites/' + siteId + '/checklist');
   if (!res) return;
   setAllChecklist((await res.json()).items || []);
-  renderChecklist(allChecklist);
+  renderChecklist(State.allChecklist);
   updateChecklistProgress();
 }
 
@@ -19,7 +20,7 @@ export function renderChecklist(items) {
   }
 
   const totalPages = Math.ceil(items.length / CHECKLIST_PER_PAGE);
-  const curPage    = Math.min(checklistPage, totalPages);
+  const curPage    = Math.min(State.checklistPage, totalPages);
   setChecklistPage(curPage);
   const start     = (curPage - 1) * CHECKLIST_PER_PAGE;
   const pageItems = items.slice(start, start + CHECKLIST_PER_PAGE);
@@ -82,8 +83,8 @@ export function renderChecklist(items) {
 }
 
 export function updateChecklistProgress() {
-  const total   = allChecklist.length;
-  const done    = allChecklist.filter(c => c.done).length;
+  const total   = State.allChecklist.length;
+  const done    = State.allChecklist.filter(c => c.done).length;
   const pending = total - done;
   document.getElementById('checklist-progress-label').textContent =
     total ? `${done} of ${total} complete — ${pending} remaining` : 'No items';
@@ -92,7 +93,7 @@ export function updateChecklistProgress() {
 export function goChecklistPage(page) {
   setChecklistPage(page);
   const f = document.getElementById('checklist-filter')?.value || '';
-  let filtered = [...allChecklist];
+  let filtered = [...State.allChecklist];
   if (f === 'pending') filtered = filtered.filter(c => !c.done);
   if (f === 'done')    filtered = filtered.filter(c =>  c.done);
   if (f === 'high')    filtered = filtered.filter(c => c.priority === 'high');
@@ -104,7 +105,7 @@ export function goChecklistPage(page) {
 export function filterChecklist() {
   setChecklistPage(1);
   const f = document.getElementById('checklist-filter').value;
-  let filtered = [...allChecklist];
+  let filtered = [...State.allChecklist];
   if (f === 'pending') filtered = filtered.filter(c => !c.done);
   if (f === 'done')    filtered = filtered.filter(c =>  c.done);
   if (f === 'high')    filtered = filtered.filter(c => c.priority === 'high');
@@ -113,7 +114,7 @@ export function filterChecklist() {
 }
 
 export async function toggleChecklistItem(itemId) {
-  const item = allChecklist.find(c => c.id === itemId);
+  const item = State.allChecklist.find(c => c.id === itemId);
   if (!item) return;
   item.done         = !item.done;
   item.completed_at = item.done ? new Date().toISOString() : null;
@@ -127,7 +128,7 @@ export async function toggleChecklistItem(itemId) {
 }
 
 export async function toggleIgnoreItem(itemId, ignored) {
-  const item = allChecklist.find(c => c.id === itemId);
+  const item = State.allChecklist.find(c => c.id === itemId);
   if (!item) return;
   item.ignored = ignored;
   const el = document.getElementById('ci-' + itemId);
@@ -140,13 +141,13 @@ export async function toggleIgnoreItem(itemId, ignored) {
 }
 
 export async function clearCompletedTasks() {
-  const doneCount = allChecklist.filter(c => c.done).length;
+  const doneCount = State.allChecklist.filter(c => c.done).length;
   if (!doneCount) { toast('No completed tasks to clear'); return; }
   if (!confirm(`Remove ${doneCount} completed task${doneCount!==1?'s':''}? This cannot be undone.`)) return;
-  const res = await apiFetch('/admin/checklist/completed/' + currentSiteId, { method: 'DELETE' });
+  const res = await apiFetch('/admin/checklist/completed/' + State.currentSiteId, { method: 'DELETE' });
   if (!res || !res.ok) { toast('Failed to clear tasks'); return; }
-  setAllChecklist(allChecklist.filter(c => !c.done));
-  renderChecklist(allChecklist);
+  setAllChecklist(State.allChecklist.filter(c => !c.done));
+  renderChecklist(State.allChecklist);
   toast(doneCount + ' completed task' + (doneCount!==1?'s':'') + ' cleared');
 }
 

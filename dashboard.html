@@ -1441,6 +1441,62 @@ async function connectGSC() {
 
 async function syncGSC() {
   if (!currentSiteId) return;
+
+  // First, fetch available properties so user can confirm the right one
+  const propRes = await apiFetch('/admin/gsc/properties/' + currentSiteId);
+  if (!propRes || !propRes.ok) { toast('Could not fetch GSC properties'); return; }
+  const { properties } = await propRes.json();
+
+  if (!properties || !properties.length) {
+    toast('No GSC properties found on this account');
+    return;
+  }
+
+  // Show a simple select dialog
+  const site       = sites.find(s => s.id === currentSiteId);
+  const current    = site?.gsc_property_url || '';
+  const optionsHtml = properties.map(p =>
+    `<option value="${p}" ${p === current ? 'selected' : ''}>${p}</option>`
+  ).join('');
+
+  const modalHtml = `
+    <div class="modal" style="max-width:440px">
+      <div class="modal-title">Select GSC Property</div>
+      <div class="modal-sub">Choose the property that matches this site.</div>
+      <div class="modal-field">
+        <label>GSC Property</label>
+        <select id="gsc-property-select">${optionsHtml}</select>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="closeGSCModal()">Cancel</button>
+        <button class="btn-primary" onclick="confirmGSCSync()">Sync This Property →</button>
+      </div>
+    </div>`;
+
+  // Show inline modal
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.id = 'gsc-modal-overlay';
+  overlay.innerHTML = modalHtml;
+  document.body.appendChild(overlay);
+}
+
+function closeGSCModal() {
+  const el = document.getElementById('gsc-modal-overlay');
+  if (el) el.remove();
+}
+
+async function confirmGSCSync() {
+  const propertyUrl = document.getElementById('gsc-property-select').value;
+  closeGSCModal();
+
+  // Save the selected property
+  await apiFetch('/admin/gsc/property/' + currentSiteId, {
+    method: 'PATCH',
+    body: JSON.stringify({ property_url: propertyUrl })
+  });
+
+  // Now run the sync
   const btn = document.getElementById('btn-gsc-sync');
   btn.textContent = '↻ Syncing...';
   btn.disabled = true;

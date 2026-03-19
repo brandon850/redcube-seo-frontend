@@ -465,6 +465,7 @@ select.filter-select{background:var(--b2);border:1px solid var(--b4);border-radi
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:.5rem">
               <div style="font-size:.65rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--g3)" id="checklist-progress-label">— items remaining</div>
               <div style="display:flex;gap:.5rem">
+                <button class="btn-secondary" onclick="clearCompletedTasks()" style="color:var(--crimson);border-color:var(--crimson)">✕ Clear Completed</button>
                 <select class="filter-select" id="checklist-filter" onchange="filterChecklist()">
                   <option value="">All Items</option>
                   <option value="pending">Pending Only</option>
@@ -1069,6 +1070,19 @@ function filterChecklist() {
   if (f === 'done')    filtered = filtered.filter(c => c.done);
   if (f === 'high')    filtered = filtered.filter(c => c.priority === 'high');
   renderChecklist(filtered);
+}
+
+async function clearCompletedTasks() {
+  const doneCount = allChecklist.filter(c => c.done).length;
+  if (!doneCount) { toast('No completed tasks to clear'); return; }
+  if (!confirm(`Remove ${doneCount} completed task${doneCount !== 1 ? 's' : ''}? This cannot be undone.`)) return;
+
+  const res = await apiFetch('/admin/checklist/completed/' + currentSiteId, { method: 'DELETE' });
+  if (!res || !res.ok) { toast('Failed to clear tasks'); return; }
+
+  allChecklist = allChecklist.filter(c => !c.done);
+  renderChecklist(allChecklist);
+  toast(doneCount + ' completed task' + (doneCount !== 1 ? 's' : '') + ' cleared');
 }
 
 // ════════════════════════════════════════════════════

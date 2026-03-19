@@ -7,7 +7,7 @@ export async function loadSites() {
   const res = await apiFetch('/admin/sites');
   if (!res) return;
   const data = await res.json();
-  setSites(data.State.sites || []);
+  setSites(data.sites || []);
   populateSiteDropdowns();
 }
 

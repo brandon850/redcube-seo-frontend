@@ -1,6 +1,6 @@
-import { allContent, currentSiteId, sites } from './state.js';
-import { setAllContent } from './state.js';
-import { toast, apiFetch, fmtDate } from './utils.js';
+import { allContent, currentSiteId, sites } from '/js/state.js';
+import { setAllContent } from '/js/state.js';
+import { toast, apiFetch, fmtDate } from '/js/utils.js';
 
 export async function loadSiteContent(siteId) {
   const res = await apiFetch('/admin/sites/' + siteId + '/content');
@@ -72,7 +72,7 @@ export function openEditor(draftId) {
   if (draft.site_id) document.getElementById('editor-site').value = draft.site_id;
   document.getElementById('content-list-view').style.display   = 'none';
   document.getElementById('content-editor-view').style.display = '';
-  const { navTo } = import('./app.js').then(m => m.navTo('content'));
+  const { navTo } = import('/js/app.js').then(m => m.navTo('content'));
   scoreContent();
 }
 

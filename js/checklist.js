@@ -1,6 +1,6 @@
-import { allChecklist, currentSiteId, checklistPage, CHECKLIST_PER_PAGE } from './state.js';
-import { setAllChecklist, setChecklistPage } from './state.js';
-import { toast, apiFetch, fmtDate } from './utils.js';
+import { allChecklist, currentSiteId, checklistPage, CHECKLIST_PER_PAGE } from '/js/state.js';
+import { setAllChecklist, setChecklistPage } from '/js/state.js';
+import { toast, apiFetch, fmtDate } from '/js/utils.js';
 
 export async function loadSiteChecklist(siteId) {
   const res = await apiFetch('/admin/sites/' + siteId + '/checklist');

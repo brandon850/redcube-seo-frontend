@@ -415,6 +415,14 @@ select.filter-select{background:var(--b2);border:1px solid var(--b4);border-radi
                 <div class="sdh-meta-item">Last Audit<span id="sdh-last-audit">—</span></div>
                 <div class="sdh-meta-item">Status<span id="sdh-status">—</span></div>
                 <div class="sdh-meta-item">GSC<span id="sdh-gsc-status" style="color:var(--g2)">Not connected</span></div>
+                <div class="sdh-meta-item">
+                  Max Pages
+                  <span style="display:flex;align-items:center;gap:.4rem;margin-top:2px">
+                    <input type="number" id="sdh-max-pages" min="10" max="500" value="100"
+                      style="width:64px;background:var(--b3);border:1px solid var(--b4);border-radius:2px;padding:.2rem .4rem;font-family:'Montserrat',sans-serif;font-size:.72rem;font-weight:700;color:var(--white);outline:none"
+                      onchange="saveMaxPages(this.value)">
+                  </span>
+                </div>
               </div>
             </div>
             <div class="sdh-grade">
@@ -468,9 +476,10 @@ select.filter-select{background:var(--b2);border:1px solid var(--b4);border-radi
                 <button class="btn-secondary" onclick="clearCompletedTasks()" style="color:var(--crimson);border-color:var(--crimson)">✕ Clear Completed</button>
                 <select class="filter-select" id="checklist-filter" onchange="filterChecklist()">
                   <option value="">All Items</option>
+                  <option value="high">High Priority</option>
                   <option value="pending">Pending Only</option>
                   <option value="done">Completed</option>
-                  <option value="high">High Priority</option>
+                  <option value="ignored">Ignored</option>
                 </select>
               </div>
             </div>
@@ -911,6 +920,7 @@ async function openSiteDetail(siteId) {
   document.getElementById('sdh-pages').textContent      = site.pages_crawled || 0;
   document.getElementById('sdh-last-audit').textContent = fmtDate(site.last_audit);
   document.getElementById('sdh-status').textContent     = site.last_audit ? 'Active' : 'Not yet audited';
+  document.getElementById('sdh-max-pages').value = site.max_pages || 100;
 
   // GSC connection status
   const gscStatus  = document.getElementById('sdh-gsc-status');
@@ -1020,21 +1030,29 @@ function renderChecklist(items) {
     groups[g].push(item);
   });
   container.innerHTML = Object.entries(groups).map(([group, groupItems]) => `
-    <div class="checklist-group">
-      <div class="checklist-group-title">${group}</div>
-      ${groupItems.map(item => `
-        <div class="checklist-item ${item.done ? 'done' : ''}" id="ci-${item.id}">
-          <div class="ci-check" onclick="toggleChecklistItem('${item.id}')">✓</div>
-          <div class="ci-body">
-            <div class="ci-text">
-              ${item.text}
-              <span class="ci-priority priority-${item.priority || 'med'}">${item.priority || 'med'}</span>
-            </div>
-            ${item.page_url ? `<div class="ci-meta">Page: ${item.page_url}</div>` : ''}
-            ${item.done && item.completed_at ? `<div class="ci-meta">Completed ${fmtDate(item.completed_at)}</div>` : ''}
+  <div class="checklist-group">
+    <div class="checklist-group-title">${group}</div>
+    ${groupItems.map(item => `
+      <div class="checklist-item ${item.done ? 'done' : ''} ${item.ignored ? 'ignored' : ''}"
+           id="ci-${item.id}" style="${item.ignored ? 'opacity:.35' : ''}">
+        <div class="ci-check" onclick="toggleChecklistItem('${item.id}')">✓</div>
+        <div class="ci-body">
+          <div class="ci-text">
+            ${item.text}
+            <span class="ci-priority priority-${item.priority || 'med'}">${item.priority || 'med'}</span>
           </div>
-        </div>`).join('')}
-    </div>`).join('');
+          ${item.page_url ? `<div class="ci-meta">Page: ${item.page_url}</div>` : ''}
+          ${item.done && item.completed_at ? `<div class="ci-meta">Completed ${fmtDate(item.completed_at)}</div>` : ''}
+          ${item.ignored ? `<div class="ci-meta" style="color:var(--g2)">Ignored — won't reappear after next audit</div>` : ''}
+        </div>
+        <button class="action-btn ${item.ignored ? '' : 'danger'}"
+          onclick="toggleIgnoreItem('${item.id}', ${!item.ignored})"
+          title="${item.ignored ? 'Unignore' : 'Ignore this item'}"
+          style="flex-shrink:0;font-size:.6rem;padding:.25rem .55rem">
+          ${item.ignored ? 'Unignore' : 'Ignore'}
+        </button>
+      </div>`).join('')}
+  </div>`).join('');
   updateChecklistProgress();
 }
 
@@ -1063,9 +1081,29 @@ async function toggleChecklistItem(itemId) {
   });
 }
 
+async function toggleIgnoreItem(itemId, ignored) {
+  const item = allChecklist.find(c => c.id === itemId);
+  if (!item) return;
+  item.ignored = ignored;
+
+  const el = document.getElementById('ci-' + itemId);
+  if (el) {
+    el.style.opacity = ignored ? '.35' : '1';
+    el.classList.toggle('ignored', ignored);
+  }
+
+  await apiFetch('/admin/checklist/' + itemId + '/ignore', {
+    method: 'PATCH',
+    body: JSON.stringify({ ignored })
+  });
+
+  toast(ignored ? 'Item ignored — won\'t reappear after next audit' : 'Item unignored');
+}
+
 function filterChecklist() {
   const f = document.getElementById('checklist-filter').value;
   let filtered = [...allChecklist];
+  if (f === 'ignored') filtered = filtered.filter(c => c.ignored);
   if (f === 'pending') filtered = filtered.filter(c => !c.done);
   if (f === 'done')    filtered = filtered.filter(c => c.done);
   if (f === 'high')    filtered = filtered.filter(c => c.priority === 'high');
@@ -1386,6 +1424,18 @@ function scoreContent() {
   }
   renderChecks(seoChecks, 'seo-checks');
   renderChecks(readChecks, 'readability-checks');
+}
+
+async function saveMaxPages(val) {
+  if (!currentSiteId) return;
+  await apiFetch('/admin/sites/' + currentSiteId + '/settings', {
+    method: 'PATCH',
+    body: JSON.stringify({ max_pages: parseInt(val) })
+  });
+  // Update local state
+  const site = sites.find(s => s.id === currentSiteId);
+  if (site) site.max_pages = parseInt(val);
+  toast('Crawl limit updated to ' + val + ' pages');
 }
 
 // ════════════════════════════════════════════════════

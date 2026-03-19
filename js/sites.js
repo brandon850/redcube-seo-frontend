@@ -70,10 +70,16 @@ export async function renderSitesTable(tbodyId, isOverview) {
 export async function openSiteDetail(siteId) {
   const { sites } = await import('/js/state.js');
   setCurrentSiteId(siteId);
-  const { navTo } = await import('/js/app.js');
-  navTo('sites');
   const site = sites.find(s => s.id === siteId);
   if (!site) return;
+
+  // Activate the sites panel directly without calling renderSitesList()
+  document.querySelectorAll('.sb-item').forEach(el => el.classList.remove('active'));
+  document.querySelector('.sb-item[data-panel="sites"]')?.classList.add('active');
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('panel-sites')?.classList.add('active');
+  document.getElementById('topbar-title').textContent = site.name;
+
   document.getElementById('sites-list-view').style.display  = 'none';
   document.getElementById('site-detail-view').style.display = '';
   document.getElementById('sdh-name').textContent         = site.name;
@@ -83,7 +89,6 @@ export async function openSiteDetail(siteId) {
   document.getElementById('sdh-last-audit').textContent   = fmtDate(site.last_audit);
   document.getElementById('sdh-status').textContent       = site.last_audit ? 'Active' : 'Not yet audited';
   document.getElementById('sdh-max-pages').value          = site.max_pages || 100;
-  document.getElementById('topbar-title').textContent     = site.name;
   const gc = gradeColor(site.last_grade);
   document.getElementById('sdh-grade').textContent        = site.last_grade || '—';
   document.getElementById('sdh-grade').style.color        = gc;

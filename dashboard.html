@@ -54,6 +54,7 @@
       <div class="sb-item" data-panel="content" onclick="navTo('content')"><span class="sb-item-icon">◻</span>Content</div>
       <div class="sb-item" data-panel="reports" onclick="navTo('reports')"><span class="sb-item-icon">◈</span>Reports</div>
       <div class="sb-section">Settings</div>
+      <div class="sb-item" data-panel="leads" onclick="navTo('leads')"><span class="sb-item-icon">◎</span>Leads</div>
       <div class="sb-item" data-panel="team" onclick="navTo('team')"><span class="sb-item-icon">◉</span>Team</div>
     </nav>
     <div class="sb-footer">
@@ -370,6 +371,12 @@
         <div id="reports-container"></div>
       </div>
 
+      <!-- LEADS PANEL -->
+      <div class="panel" id="panel-leads">
+        <div class="section-title">Leads</div>
+        <div id="leads-container"></div>
+      </div>
+
       <!-- TEAM PANEL -->
       <div class="panel" id="panel-team">
         <div class="section-header">
@@ -447,6 +454,7 @@
   import '/js/content.js';
   import '/js/reports.js';
   import '/js/team.js';
+  import '/js/leads.js';
 
   // Expose auth functions for inline onclick handlers in HTML
   window.doLogin  = doLogin;

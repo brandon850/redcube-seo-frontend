@@ -1,6 +1,6 @@
 import { showScreen } from '/js/utils.js';
 
-const PANEL_TITLES = { overview:'Overview', sites:'Sites', keywords:'Keyword Tracking', content:'Content', reports:'Client Reports', team:'Team' };
+const PANEL_TITLES = { overview:'Overview', sites:'Sites', keywords:'Keyword Tracking', content:'Content', reports:'Client Reports', leads:'Leads', team:'Team' };
 
 export async function initApp() {
   const { authUser } = await import('/js/state.js');
@@ -25,6 +25,8 @@ export async function navTo(panel) {
   if (panel === 'content')  { const m = await import('/js/content.js');  m.loadContentPanel(); }
   if (panel === 'reports')  { const m = await import('/js/reports.js');  m.loadReports(); }
   if (panel === 'team')     { const m = await import('/js/team.js');     m.loadTeam(); }
+  if (panel === 'leads')    { const m = await import('/js/leads.js');    m.loadLeads(); }
+  if (panel === 'leads')    { const m = await import('/js/leads.js');    m.loadLeads(); }
 }
 
 export function switchTab(tab) {

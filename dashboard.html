@@ -479,7 +479,7 @@ select.filter-select{background:var(--b2);border:1px solid var(--b4);border-radi
               <select class="filter-select" id="kw-group-assign" style="min-width:160px">
                 <option value="">No group</option>
               </select>
-              <select class="filter-select" id="kw-page-assign" style="min-width:180px">
+              <select class="filter-select" id="kw-page-assign" style="min-width:220px">
                 <option value="">Assign to page (optional)</option>
               </select>
               <button class="btn-primary" onclick="addKeyword()">+ Add</button>
@@ -1116,15 +1116,18 @@ async function runFullAudit() {
 //  KEYWORDS
 // ════════════════════════════════════════════════════
 async function loadSiteKeywords(siteId) {
-  const [kwRes, grpRes] = await Promise.all([
+  const [kwRes, grpRes, pageRes] = await Promise.all([
     apiFetch('/admin/sites/' + siteId + '/keywords'),
     apiFetch('/admin/sites/' + siteId + '/keyword-groups'),
+    apiFetch('/admin/sites/' + siteId + '/pages'),
   ]);
-  if (!kwRes || !grpRes) return;
-  allKeywords      = (await kwRes.json()).keywords || [];
-  allKeywordGroups = (await grpRes.json()).groups  || [];
+  if (!kwRes || !grpRes || !pageRes) return;
+  allKeywords      = (await kwRes.json()).keywords   || [];
+  allKeywordGroups = (await grpRes.json()).groups    || [];
+  allPages         = (await pageRes.json()).pages    || [];
   renderSiteKeywords();
   populateGroupDropdown();
+  populateKeywordPageDropdown();
 }
 
 function renderSiteKeywords() {
@@ -1237,6 +1240,20 @@ function populateGroupDropdown() {
   allKeywordGroups.forEach(g => {
     const o = document.createElement('option');
     o.value = g.id; o.textContent = g.name;
+    sel.appendChild(o);
+  });
+}
+
+function populateKeywordPageDropdown() {
+  const sel = document.getElementById('kw-page-assign');
+  if (!sel) return;
+  sel.innerHTML = '<option value="">Assign to page (optional)</option>';
+  allPages.forEach(p => {
+    const o    = document.createElement('option');
+    o.value    = p.url;
+    // Show the page title if available, fall back to the URL path
+    const path = (() => { try { return new URL(p.url).pathname; } catch { return p.url; } })();
+    o.textContent = (p.title ? p.title + '  —  ' : '') + path;
     sel.appendChild(o);
   });
 }

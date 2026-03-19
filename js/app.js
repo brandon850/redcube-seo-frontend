@@ -1,5 +1,5 @@
-import { authUser, sites, currentSiteId } from '/state.js';
-import { showScreen } from '/utils.js';
+import { authUser, sites, currentSiteId } from '/js/state.js';
+import { showScreen } from '/js/utils.js';
 
 const PANEL_TITLES = {
   overview: 'Overview', sites: 'Sites', keywords: 'Keyword Tracking',
@@ -9,7 +9,7 @@ const PANEL_TITLES = {
 export async function initApp() {
   showScreen('screen-app');
   document.getElementById('sb-user-label').textContent = authUser?.email || '—';
-  const { loadSites } = await import('./sites.js');
+  const { loadSites } = await import('/js/sites.js');
   await loadSites();
   navTo('overview');
 }
@@ -22,12 +22,12 @@ export async function navTo(panel) {
   document.getElementById('topbar-title').textContent = PANEL_TITLES[panel] || panel;
   document.getElementById('topbar-actions').innerHTML = '';
 
-  if (panel === 'overview') { const { renderOverview } = await import('./sites.js'); renderOverview(); }
-  if (panel === 'sites')    { const { renderSitesList } = await import('./sites.js'); renderSitesList(); }
-  if (panel === 'keywords') { const { loadKeywordsPanel } = await import('./keywords.js'); loadKeywordsPanel(); }
-  if (panel === 'content')  { const { loadContentPanel } = await import('./content.js'); loadContentPanel(); }
-  if (panel === 'reports')  { const { loadReports } = await import('./reports.js'); loadReports(); }
-  if (panel === 'team')     { const { loadTeam } = await import('./team.js'); loadTeam(); }
+  if (panel === 'overview') { const { renderOverview } = await import('/js/sites.js'); renderOverview(); }
+  if (panel === 'sites')    { const { renderSitesList } = await import('/js/sites.js'); renderSitesList(); }
+  if (panel === 'keywords') { const { loadKeywordsPanel } = await import('/js/keywords.js'); loadKeywordsPanel(); }
+  if (panel === 'content')  { const { loadContentPanel } = await import('/js/content.js'); loadContentPanel(); }
+  if (panel === 'reports')  { const { loadReports } = await import('/js/reports.js'); loadReports(); }
+  if (panel === 'team')     { const { loadTeam } = await import('/js/team.js'); loadTeam(); }
 }
 
 export function switchTab(tab) {

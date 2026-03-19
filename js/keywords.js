@@ -1,6 +1,6 @@
-import { allKeywords, allKeywordGroups, allPages, currentSiteId, sites } from './state.js';
-import { setAllKeywords, setAllKeywordGroups, setAllPages } from './state.js';
-import { toast, apiFetch, fmtDate } from './utils.js';
+import { allKeywords, allKeywordGroups, allPages, currentSiteId, sites } from '/js/state.js';
+import { setAllKeywords, setAllKeywordGroups, setAllPages } from '/js/state.js';
+import { toast, apiFetch, fmtDate } from '/js/utils.js';
 
 export async function loadSiteKeywords(siteId) {
   const [kwRes, grpRes, pageRes] = await Promise.all([

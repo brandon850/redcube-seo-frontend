@@ -1,5 +1,5 @@
-import { sites, currentSiteId } from './state.js';
-import { toast, apiFetch, gradeColor, fmtDate } from './utils.js';
+import { sites, currentSiteId } from '/js/state.js';
+import { toast, apiFetch, gradeColor, fmtDate } from '/js/utils.js';
 
 export async function loadReports() {
   const siteFilter = document.getElementById('report-site-filter')?.value || '';

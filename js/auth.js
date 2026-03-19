@@ -1,6 +1,6 @@
-import * as State from './state.js';
-import { setAuthToken, setAuthUser, clearAuth } from './state.js';
-import { toast, showScreen } from './utils.js';
+import * as State from '/js/state.js';
+import { setAuthToken, setAuthUser, clearAuth } from '/js/state.js';
+import { toast, showScreen } from '/js/utils.js';
 
 export async function doLogin() {
   const email = document.getElementById('login-email').value.trim();
@@ -26,7 +26,7 @@ export async function doLogin() {
     setAuthToken(data.token);
     setAuthUser(data.user);
 
-    const { initApp } = await import('./app.js');
+    const { initApp } = await import('/js/app.js');
     initApp();
   } catch (err) {
     console.error('[login]', err);
@@ -49,10 +49,10 @@ export async function boot() {
     const siteId = params.get('site_id');
     history.replaceState({}, '', '/dashboard');
     if (State.authToken && State.authUser) {
-      const { initApp } = await import('./app.js');
+      const { initApp } = await import('/js/app.js');
       await initApp();
       if (siteId) {
-        const { openSiteDetail } = await import('./sites.js');
+        const { openSiteDetail } = await import('/js/sites.js');
         openSiteDetail(siteId);
       }
     } else {
@@ -67,7 +67,7 @@ export async function boot() {
   }
 
   if (State.authToken && State.authUser) {
-    const { initApp } = await import('./app.js');
+    const { initApp } = await import('/js/app.js');
     initApp();
   } else {
     showScreen('screen-login');

@@ -1,7 +1,7 @@
-import { allPages, allChecklist, currentSiteId } from './state.js';
-import { setAllPages } from './state.js';
-import { toast, apiFetch, scoreColor, fmtDate } from './utils.js';
-import { switchTab } from './app.js';
+import { allPages, allChecklist, currentSiteId } from '/js/state.js';
+import { setAllPages } from '/js/state.js';
+import { toast, apiFetch, scoreColor, fmtDate } from '/js/utils.js';
+import { switchTab } from '/js/app.js';
 
 export async function loadSitePages(siteId) {
   const res = await apiFetch('/admin/sites/' + siteId + '/pages');

@@ -1,7 +1,7 @@
-import { sites, currentSiteId, authUser } from './state.js';
-import { setSites, setCurrentSiteId } from './state.js';
-import { toast, apiFetch, gradeColor, relativeTime, fmtDate, openModal, closeModal } from './utils.js';
-import { switchTab } from './app.js';
+import { sites, currentSiteId, authUser } from '/js/state.js';
+import { setSites, setCurrentSiteId } from '/js/state.js';
+import { toast, apiFetch, gradeColor, relativeTime, fmtDate, openModal, closeModal } from '/js/utils.js';
+import { switchTab } from '/js/app.js';
 
 export async function loadSites() {
   const res = await apiFetch('/admin/sites');
@@ -75,7 +75,7 @@ export function renderSitesTable(tbodyId, isOverview) {
 
 export async function openSiteDetail(siteId) {
   setCurrentSiteId(siteId);
-  const { navTo } = await import('./app.js');
+  const { navTo } = await import('/js/app.js');
   navTo('sites');
   const site = sites.find(s => s.id === siteId);
   if (!site) return;
@@ -108,10 +108,10 @@ export async function openSiteDetail(siteId) {
   }
 
   switchTab('pages');
-  const { loadSitePages }     = await import('./pages.js');
-  const { loadSiteChecklist } = await import('./checklist.js');
-  const { loadSiteKeywords }  = await import('./keywords.js');
-  const { loadSiteContent }   = await import('./content.js');
+  const { loadSitePages }     = await import('/js/pages.js');
+  const { loadSiteChecklist } = await import('/js/checklist.js');
+  const { loadSiteKeywords }  = await import('/js/keywords.js');
+  const { loadSiteContent }   = await import('/js/content.js');
   await Promise.all([
     loadSitePages(siteId),
     loadSiteChecklist(siteId),
@@ -171,8 +171,8 @@ export async function runFullAudit() {
       document.getElementById('sdh-pages').textContent       = updated.pages_crawled || 0;
       document.getElementById('sdh-last-audit').textContent  = fmtDate(updated.last_audit);
     }
-    const { loadSitePages }     = await import('./pages.js');
-    const { loadSiteChecklist } = await import('./checklist.js');
+    const { loadSitePages }     = await import('/js/pages.js');
+    const { loadSiteChecklist } = await import('/js/checklist.js');
     await loadSitePages(currentSiteId);
     await loadSiteChecklist(currentSiteId);
     toast('Audit complete — ' + (data.pages_crawled || 0) + ' pages crawled');

@@ -686,6 +686,8 @@ let allChecklist = [];
 let allKeywords = [];
 let allContent  = [];
 let editingDraftId = null;
+let checklistPage     = 1;
+const CHECKLIST_PER_PAGE = 25;
 
 // ════════════════════════════════════════════════════
 //  UTILS
@@ -1022,38 +1024,87 @@ function renderChecklist(items) {
     updateChecklistProgress();
     return;
   }
-  // Group by category
+
+  const totalPages = Math.ceil(items.length / CHECKLIST_PER_PAGE);
+  checklistPage    = Math.min(checklistPage, totalPages);
+  const start      = (checklistPage - 1) * CHECKLIST_PER_PAGE;
+  const pageItems  = items.slice(start, start + CHECKLIST_PER_PAGE);
+
+  // Group current page items by category
   const groups = {};
-  items.forEach(item => {
+  pageItems.forEach(item => {
     const g = item.category || 'General';
     if (!groups[g]) groups[g] = [];
     groups[g].push(item);
   });
+
   container.innerHTML = Object.entries(groups).map(([group, groupItems]) => `
-  <div class="checklist-group">
-    <div class="checklist-group-title">${group}</div>
-    ${groupItems.map(item => `
-      <div class="checklist-item ${item.done ? 'done' : ''} ${item.ignored ? 'ignored' : ''}"
-           id="ci-${item.id}" style="${item.ignored ? 'opacity:.35' : ''}">
-        <div class="ci-check" onclick="toggleChecklistItem('${item.id}')">✓</div>
-        <div class="ci-body">
-          <div class="ci-text">
-            ${item.text}
-            <span class="ci-priority priority-${item.priority || 'med'}">${item.priority || 'med'}</span>
+    <div class="checklist-group">
+      <div class="checklist-group-title">${group}</div>
+      ${groupItems.map(item => `
+        <div class="checklist-item ${item.done ? 'done' : ''} ${item.ignored ? 'ignored' : ''}"
+             id="ci-${item.id}" style="${item.ignored ? 'opacity:.35' : ''}">
+          <div class="ci-check" onclick="toggleChecklistItem('${item.id}')">✓</div>
+          <div class="ci-body">
+            <div class="ci-text">
+              ${item.text}
+              <span class="ci-priority priority-${item.priority || 'med'}">${item.priority || 'med'}</span>
+            </div>
+            ${item.page_url ? `<div class="ci-meta">Page: ${item.page_url}</div>` : ''}
+            ${item.done && item.completed_at ? `<div class="ci-meta">Completed ${fmtDate(item.completed_at)}</div>` : ''}
+            ${item.ignored ? `<div class="ci-meta" style="color:var(--g2)">Ignored — won't reappear after next audit</div>` : ''}
           </div>
-          ${item.page_url ? `<div class="ci-meta">Page: ${item.page_url}</div>` : ''}
-          ${item.done && item.completed_at ? `<div class="ci-meta">Completed ${fmtDate(item.completed_at)}</div>` : ''}
-          ${item.ignored ? `<div class="ci-meta" style="color:var(--g2)">Ignored — won't reappear after next audit</div>` : ''}
+          <button class="action-btn ${item.ignored ? '' : 'danger'}"
+            onclick="toggleIgnoreItem('${item.id}', ${!item.ignored})"
+            style="flex-shrink:0;font-size:.6rem;padding:.25rem .55rem">
+            ${item.ignored ? 'Unignore' : 'Ignore'}
+          </button>
+        </div>`).join('')}
+    </div>`).join('');
+
+  // Pagination controls
+  if (totalPages > 1) {
+    const paginationHtml = `
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:1rem;padding-top:1rem;border-top:1px solid var(--b3)">
+        <div style="font-size:.65rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--g3)">
+          Showing ${start + 1}–${Math.min(start + CHECKLIST_PER_PAGE, items.length)} of ${items.length} items
         </div>
-        <button class="action-btn ${item.ignored ? '' : 'danger'}"
-          onclick="toggleIgnoreItem('${item.id}', ${!item.ignored})"
-          title="${item.ignored ? 'Unignore' : 'Ignore this item'}"
-          style="flex-shrink:0;font-size:.6rem;padding:.25rem .55rem">
-          ${item.ignored ? 'Unignore' : 'Ignore'}
-        </button>
-      </div>`).join('')}
-  </div>`).join('');
+        <div style="display:flex;align-items:center;gap:.4rem">
+          <button class="action-btn" onclick="goChecklistPage(1)" ${checklistPage === 1 ? 'disabled' : ''} title="First">«</button>
+          <button class="action-btn" onclick="goChecklistPage(${checklistPage - 1})" ${checklistPage === 1 ? 'disabled' : ''} title="Previous">‹</button>
+          ${Array.from({ length: totalPages }, (_, i) => i + 1)
+            .filter(p => p === 1 || p === totalPages || Math.abs(p - checklistPage) <= 2)
+            .reduce((acc, p, i, arr) => {
+              if (i > 0 && p - arr[i-1] > 1) acc.push('...');
+              acc.push(p);
+              return acc;
+            }, [])
+            .map(p => p === '...'
+              ? `<span style="font-size:.65rem;color:var(--g2);padding:0 .25rem">…</span>`
+              : `<button class="action-btn ${p === checklistPage ? 'active' : ''}"
+                   onclick="goChecklistPage(${p})"
+                   style="${p === checklistPage ? 'border-color:var(--red);color:var(--red)' : ''}">${p}</button>`
+            ).join('')}
+          <button class="action-btn" onclick="goChecklistPage(${checklistPage + 1})" ${checklistPage === totalPages ? 'disabled' : ''} title="Next">›</button>
+          <button class="action-btn" onclick="goChecklistPage(${totalPages})" ${checklistPage === totalPages ? 'disabled' : ''} title="Last">»</button>
+        </div>
+      </div>`;
+    container.insertAdjacentHTML('beforeend', paginationHtml);
+  }
+
   updateChecklistProgress();
+}
+
+function goChecklistPage(page) {
+  checklistPage = page;
+  const f = document.getElementById('checklist-filter')?.value || '';
+  let filtered = [...allChecklist];
+  if (f === 'pending') filtered = filtered.filter(c => !c.done);
+  if (f === 'done')    filtered = filtered.filter(c => c.done);
+  if (f === 'high')    filtered = filtered.filter(c => c.priority === 'high');
+  if (f === 'ignored') filtered = filtered.filter(c => c.ignored);
+  renderChecklist(filtered);
+  document.getElementById('tab-checklist').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 function updateChecklistProgress() {
@@ -1101,12 +1152,13 @@ async function toggleIgnoreItem(itemId, ignored) {
 }
 
 function filterChecklist() {
+  checklistPage = 1;
   const f = document.getElementById('checklist-filter').value;
   let filtered = [...allChecklist];
-  if (f === 'ignored') filtered = filtered.filter(c => c.ignored);
   if (f === 'pending') filtered = filtered.filter(c => !c.done);
   if (f === 'done')    filtered = filtered.filter(c => c.done);
   if (f === 'high')    filtered = filtered.filter(c => c.priority === 'high');
+  if (f === 'ignored') filtered = filtered.filter(c => c.ignored);
   renderChecklist(filtered);
 }
 

@@ -89,6 +89,13 @@ function renderLeads(leads) {
                       style="font-size:.68rem;padding:.3rem .6rem;min-width:160px"
                       onblur="saveLeadNotes('${lead.id}', this.value)"
                       onkeydown="if(event.key==='Enter')saveLeadNotes('${lead.id}',this.value)">
+                    <button class="action-btn danger"
+                      id="lead-delete-${lead.id}"
+                      onclick="deleteLead('${lead.id}')"
+                      ${lead.lead_status !== 'closed' ? 'disabled title="Mark as Closed to delete"' : 'title="Delete lead"'}
+                      style="${lead.lead_status !== 'closed' ? 'opacity:.3;cursor:not-allowed' : ''}">
+                      ✕
+                    </button>
                   </div>
                 </td>
               </tr>`;
@@ -104,6 +111,17 @@ export async function updateLeadStatus(leadId, status) {
     body: JSON.stringify({ lead_status: status }),
   });
   if (!res || !res.ok) { toast('Failed to update status'); return; }
+
+  // Enable/disable delete button based on status
+  const deleteBtn = document.getElementById('lead-delete-' + leadId);
+  if (deleteBtn) {
+    const isClosed = status === 'closed';
+    deleteBtn.disabled            = !isClosed;
+    deleteBtn.style.opacity       = isClosed ? '1' : '.3';
+    deleteBtn.style.cursor        = isClosed ? 'pointer' : 'not-allowed';
+    deleteBtn.title               = isClosed ? 'Delete lead' : 'Mark as Closed to delete';
+  }
+
   const label = STATUS_LABELS[status]?.label || status;
   toast('Status updated to ' + label);
 }
@@ -117,6 +135,15 @@ export async function saveLeadNotes(leadId, notes) {
   toast('Notes saved');
 }
 
+export async function deleteLead(leadId) {
+  if (!confirm('Permanently delete this lead? This cannot be undone.')) return;
+  const res = await apiFetch('/admin/leads/' + leadId, { method: 'DELETE' });
+  if (!res || !res.ok) { toast('Failed to delete lead'); return; }
+  document.getElementById('lead-row-' + leadId)?.remove();
+  toast('Lead deleted');
+}
+
 window.loadLeads        = loadLeads;
+window.deleteLead       = deleteLead;
 window.updateLeadStatus = updateLeadStatus;
 window.saveLeadNotes    = saveLeadNotes;
